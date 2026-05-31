@@ -44,8 +44,8 @@ export default function TeacherLabelsPage() {
       <Stack gap="var(--space-4)">
         <SupabaseBanner />
         <Text variant="body" style={{ color: 'var(--color-text-muted)' }}>
-          Each label includes QR code, title, and author — match books by reading the title on the
-          sticker.
+          Each sticker is a 0.8″ QR with LIB- id below. Use the on-screen match list when printing
+          to pair stickers with books.
         </Text>
         <Stack gap="var(--space-2)" style={{ flexDirection: 'row' }}>
           <Button

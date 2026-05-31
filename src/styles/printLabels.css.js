@@ -1,3 +1,18 @@
+import { AVERY_5160 } from '../constants/avery5160.js';
+
+const {
+  sheetWidth,
+  sheetHeight,
+  labelWidth,
+  labelHeight,
+  marginTop,
+  marginLeft,
+  marginRight,
+  columnGap,
+  qrSize,
+} = AVERY_5160;
+
+/** Avery 5160 — stacked QR (0.8" min) + LIB id below. Titles shown in on-screen match list only. */
 export const labelPrintStyles = `
 @media screen {
   .label-print-screen {
@@ -5,94 +20,144 @@ export const labelPrintStyles = `
     text-align: center;
   }
   .label-print-preview-note {
-    max-width: 8.5in;
+    max-width: ${sheetWidth};
     margin: 0 auto var(--space-3);
     font-family: Arial, sans-serif;
     font-size: 12px;
     color: var(--color-text-muted);
     text-align: center;
+    line-height: 1.4;
   }
-  .label-print-area {
-    display: grid;
-    grid-template-columns: repeat(3, 2.625in);
-    grid-auto-rows: 1in;
-    gap: 0;
-    width: 8.5in;
-    margin: 0 auto;
-    padding: 0.15in;
+  .label-print-match-list {
+    max-width: ${sheetWidth};
+    margin: 0 auto var(--space-5);
+    text-align: left;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3);
+    background: var(--color-card);
+  }
+  .label-print-match-list h3 {
+    margin: 0 0 var(--space-2);
+    font-size: 13px;
+  }
+  .label-print-match-row {
+    display: flex;
+    gap: var(--space-3);
+    padding: var(--space-1) 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .label-print-match-row:last-child {
+    border-bottom: none;
+  }
+  .label-print-match-row code {
+    font-family: monospace;
+    min-width: 6.5em;
+  }
+  .label-print-pages {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-6);
+  }
+  .label-print-page {
+    width: ${sheetWidth};
+    height: ${sheetHeight};
     background: white;
     box-shadow: 0 4px 24px rgba(27, 67, 50, 0.12);
+    box-sizing: border-box;
+  }
+  .label-print-area {
+    outline: 1px dashed var(--color-border);
   }
   .label-sticker {
-    outline: 1px dashed var(--color-border);
+    outline: 1px dashed #ccc;
   }
 }
 
 @media print {
-  @page { margin: 0.15in; size: letter; }
-  body * { visibility: hidden; }
-  .label-print-area, .label-print-area * { visibility: visible; }
-  .label-print-area {
+  @page {
+    size: letter;
+    margin: 0;
+  }
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .label-print-pages,
+  .label-print-pages * {
+    visibility: visible;
+  }
+  .label-print-pages {
     position: absolute;
     left: 0;
     top: 0;
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(3, 2.625in);
-    grid-auto-rows: 1in;
-    gap: 0;
-    padding: 0;
-    box-shadow: none;
-    background: white;
   }
-  .label-sticker { outline: none; }
-  .no-print { display: none !important; }
+  .label-print-page {
+    width: ${sheetWidth};
+    height: ${sheetHeight};
+    box-sizing: border-box;
+    page-break-after: always;
+    break-after: page;
+  }
+  .label-print-page:last-child {
+    page-break-after: auto;
+    break-after: auto;
+  }
+  .label-print-area,
+  .label-sticker {
+    outline: none;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+.label-print-area {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: ${marginTop} ${marginRight} ${marginTop} ${marginLeft};
+  display: grid;
+  grid-template-columns: repeat(3, ${labelWidth});
+  column-gap: ${columnGap};
+  grid-auto-rows: ${labelHeight};
+  row-gap: 0;
 }
 
 .label-sticker {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 3px 5px;
+  justify-content: center;
+  padding: 1px 2px;
   overflow: hidden;
   box-sizing: border-box;
-  height: 1in;
-  width: 2.625in;
+  width: ${labelWidth};
+  height: ${labelHeight};
 }
 
 .label-qr {
-  width: 0.72in;
-  height: 0.72in;
+  width: ${qrSize};
+  height: ${qrSize};
+  min-width: ${qrSize};
+  min-height: ${qrSize};
   flex-shrink: 0;
-}
-
-.label-text {
-  flex: 1;
-  min-width: 0;
-  font-family: Arial, sans-serif;
-  line-height: 1.12;
-}
-
-.label-title {
-  font-size: 8px;
-  font-weight: 700;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.label-author {
-  font-size: 7px;
-  color: #52796F;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: block;
 }
 
 .label-barcode {
-  font-size: 6px;
+  font-size: 7px;
   font-family: monospace;
+  font-weight: 600;
+  line-height: 1;
   margin-top: 1px;
+  text-align: center;
+  letter-spacing: 0.02em;
 }
 `;

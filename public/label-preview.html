@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Label print preview — Class Library</title>
+    <title>Avery 5160 label preview — Class Library</title>
     <style>
       * {
         box-sizing: border-box;
@@ -22,72 +22,62 @@
         margin: 0 0 1.5rem;
         color: #52796f;
         font-size: 0.9rem;
+        max-width: 40rem;
+        line-height: 1.45;
       }
-      .sheet-wrap {
+      .label-print-pages {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+      }
+      .label-print-page {
+        width: 8.5in;
+        height: 11in;
         background: white;
         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
-        width: 8.5in;
-        min-height: 11in;
-        margin: 0 auto 2rem;
-        padding: 0.15in;
       }
-      .sheet-title {
-        font-size: 10px;
-        color: #888;
-        text-align: center;
-        margin-bottom: 0.1in;
-      }
-      /* Matches src/styles/printLabels.css.js — compact Avery-style grid */
       .label-print-area {
+        width: 100%;
+        height: 100%;
+        padding: 0.5in 0.21875in 0.5in 0.15625in;
         display: grid;
         grid-template-columns: repeat(3, 2.625in);
+        column-gap: 0.125in;
         grid-auto-rows: 1in;
-        gap: 0;
-        width: 100%;
+        row-gap: 0;
       }
       .label-sticker {
         display: flex;
+        flex-direction: column;
         align-items: center;
-        gap: 4px;
-        padding: 3px 5px;
+        justify-content: center;
+        padding: 1px 2px;
         overflow: hidden;
-        height: 1in;
         width: 2.625in;
-        border: 1px dashed #ccc;
+        height: 1in;
+        outline: 1px dashed #ccc;
       }
       .label-qr {
-        width: 0.72in;
-        height: 0.72in;
+        width: 0.8in;
+        height: 0.8in;
+        min-width: 0.8in;
+        min-height: 0.8in;
         flex-shrink: 0;
-        background: #111;
-        image-rendering: pixelated;
-      }
-      .label-text {
-        flex: 1;
-        min-width: 0;
-        line-height: 1.12;
-      }
-      .label-title {
-        font-size: 8px;
-        font-weight: 700;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-      .label-author {
-        font-size: 7px;
-        color: #52796f;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
       }
       .label-barcode {
-        font-size: 6px;
+        font-size: 7px;
         font-family: monospace;
+        font-weight: 600;
+        line-height: 1;
         margin-top: 1px;
+        text-align: center;
       }
       @media print {
+        @page {
+          size: letter;
+          margin: 0;
+        }
         body {
           background: white;
           padding: 0;
@@ -95,29 +85,28 @@
         .no-print {
           display: none;
         }
-        .sheet-wrap {
+        .label-print-page {
           box-shadow: none;
-          padding: 0.15in;
+          page-break-after: always;
         }
         .label-sticker {
-          border: none;
+          outline: none;
         }
       }
     </style>
   </head>
   <body>
     <div class="no-print">
-      <h1>Label sheet preview</h1>
+      <h1>Avery 5160 label preview</h1>
       <p class="meta">
-        Sample layout — 3×10 grid (30 labels per letter page, Avery 5160–compatible). Dashed
-        borders are for preview only; they do not print. Open this file while running
-        <code>npm run dev</code> at
-        <a href="/label-preview.html">localhost:5173/label-preview.html</a>
+        Stacked layout: <strong>0.8″ QR</strong> with <strong>LIB- id below</strong> (no title on
+        sticker). Fits Avery 5160 at 100% scale. Sample shows 9 label positions.
       </p>
     </div>
-    <div class="sheet-wrap">
-      <div class="sheet-title no-print">US Letter 8.5″ × 11″ — 30 labels per sheet</div>
-      <div class="label-print-area" id="labels"></div>
+    <div class="label-print-pages">
+      <div class="label-print-page">
+        <div class="label-print-area" id="labels"></div>
+      </div>
     </div>
     <script type="module">
       import QRCode from 'https://esm.sh/qrcode@1.5.4';
@@ -136,16 +125,12 @@
 
       const root = document.getElementById('labels');
       for (const book of books) {
-        const qr = await QRCode.toDataURL(book.barcode, { margin: 0, width: 96 });
+        const qr = await QRCode.toDataURL(book.barcode, { margin: 1, width: 240 });
         const el = document.createElement('div');
         el.className = 'label-sticker';
         el.innerHTML = `
           <img class="label-qr" src="${qr}" alt="" />
-          <div class="label-text">
-            <div class="label-title">${book.title}</div>
-            <div class="label-author">${book.author}</div>
-            <div class="label-barcode">${book.barcode}</div>
-          </div>`;
+          <div class="label-barcode">${book.barcode}</div>`;
         root.appendChild(el);
       }
     </script>

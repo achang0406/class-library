@@ -1,17 +1,34 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import QRCode from 'qrcode';
 import { markLabelsPrinted } from '../../lib/books.js';
+import { AVERY_5160, chunkForLabelSheets } from '../../constants/avery5160.js';
 import { labelPrintStyles } from '../../styles/printLabels.css.js';
+
+/** ~240px renders sharply at 0.8in on typical laser/inkjet printers. */
+const QR_RENDER_PX = 240;
+
+function LabelSticker({ book, qrSrc }) {
+  return (
+    <div className="label-sticker">
+      <img src={qrSrc} alt="" className="label-qr" />
+      <div className="label-barcode">{book.barcode}</div>
+    </div>
+  );
+}
 
 export function LabelPrintSheet({ books, onPrinted }) {
   const [qrMap, setQrMap] = useState({});
+  const pages = useMemo(() => chunkForLabelSheets(books), [books]);
 
   useEffect(() => {
     let cancelled = false;
     async function generate() {
       const entries = await Promise.all(
         books.map(async (book) => {
-          const dataUrl = await QRCode.toDataURL(book.barcode, { margin: 0, width: 96 });
+          const dataUrl = await QRCode.toDataURL(book.barcode, {
+            margin: 1,
+            width: QR_RENDER_PX,
+          });
           return [book.id, dataUrl];
         }),
       );
@@ -43,18 +60,30 @@ export function LabelPrintSheet({ books, onPrinted }) {
       <div className="label-print-screen no-print">
         <p>Opening print dialog…</p>
         <p className="label-print-preview-note">
-          Preview below — 30 labels per letter page (3 columns × 10 rows). Each copy of the same
-          title gets its own barcode.
+          Avery 5160 — {pages.length} sheet{pages.length === 1 ? '' : 's'} of stickers (
+          {AVERY_5160.qrSize} QR + id below). Print at <strong>100% scale</strong>, margins none.
+          Use the match list below to apply stickers; it does not print.
         </p>
+        <div className="label-print-match-list">
+          <h3>Match stickers to books ({books.length})</h3>
+          {books.map((book) => (
+            <div key={book.id} className="label-print-match-row">
+              <code>{book.barcode}</code>
+              <span>
+                {book.title}
+                {book.author ? ` — ${book.author}` : ''}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="label-print-area">
-        {books.map((book) => (
-          <div key={book.id} className="label-sticker">
-            <img src={qrMap[book.id]} alt="" className="label-qr" />
-            <div className="label-text">
-              <div className="label-title">{book.title}</div>
-              <div className="label-author">{book.author ?? ''}</div>
-              <div className="label-barcode">{book.barcode}</div>
+      <div className="label-print-pages">
+        {pages.map((pageBooks, pageIndex) => (
+          <div key={pageIndex} className="label-print-page">
+            <div className="label-print-area">
+              {pageBooks.map((book) => (
+                <LabelSticker key={book.id} book={book} qrSrc={qrMap[book.id]} />
+              ))}
             </div>
           </div>
         ))}
