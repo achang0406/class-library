@@ -36,6 +36,7 @@ export default function KioskPage() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [doneMessage, setDoneMessage] = useState('');
+  const [doneBorrowerType, setDoneBorrowerType] = useState('student');
 
   const { borrowers: students } = useBorrowers('student');
   const { borrowers: staff } = useBorrowers('staff');
@@ -47,6 +48,7 @@ export default function KioskPage() {
     setGuestName('');
     setError('');
     setDoneMessage('');
+    setDoneBorrowerType('student');
   }, []);
 
   const handleScanCheckout = useCallback(async (barcode) => {
@@ -109,6 +111,7 @@ export default function KioskPage() {
         borrowerType: type,
       });
       setDoneMessage(name.trim());
+      setDoneBorrowerType(type);
       setStep(STEPS.DONE_CHECKOUT);
     } catch (err) {
       setError(err.message ?? 'Checkout failed');
@@ -266,7 +269,11 @@ export default function KioskPage() {
               variant="display"
               style={{ color: 'var(--color-primary)', textAlign: 'center' }}
             >
-              Enjoy your book!
+              {doneBorrowerType === 'student'
+                ? `Enjoy your book, ${doneMessage}!`
+                : doneBorrowerType === 'staff'
+                  ? `Checked out to ${doneMessage} — thanks!`
+                  : `Checked out to ${doneMessage} — enjoy!`}
             </Text>
             <Stack gap="var(--space-3)" style={{ flexDirection: 'row', alignItems: 'center' }}>
               <BookCover src={book.cover_url} alt="" width={80} />

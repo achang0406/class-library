@@ -21,7 +21,20 @@ export async function listBooks({ search, genre, status, needsLabel } = {}) {
 
   const { data, error } = await query;
   if (error) throw error;
-  return data ?? [];
+  const books = data ?? [];
+
+  const { data: activeLoans, error: loansError } = await client
+    .from('checkouts')
+    .select('book_id, borrower_name, borrower_type')
+    .is('returned_at', null);
+  if (loansError) throw loansError;
+
+  const loanByBook = Object.fromEntries((activeLoans ?? []).map((c) => [c.book_id, c]));
+
+  return books.map((book) => ({
+    ...book,
+    activeCheckout: loanByBook[book.id] ?? null,
+  }));
 }
 
 export async function getBookById(id) {
@@ -43,20 +56,34 @@ export async function getBookByBarcode(barcode) {
 }
 
 export async function findDuplicateBook({ isbn, openLibraryKey }) {
+  const match = await findExistingCopies({ isbn, openLibraryKey });
+  return match.sample;
+}
+
+export async function findExistingCopies({ isbn, openLibraryKey }) {
   const client = requireClient();
+  let query = client.from('books').select('id, title', { count: 'exact' });
+
   if (isbn) {
-    const { data } = await client.from('books').select('id, title').eq('isbn', isbn).maybeSingle();
-    if (data) return data;
+    query = query.eq('isbn', isbn);
+  } else if (openLibraryKey) {
+    query = query.eq('open_library_key', openLibraryKey);
+  } else {
+    return { count: 0, sample: null };
   }
-  if (openLibraryKey) {
-    const { data } = await client
-      .from('books')
-      .select('id, title')
-      .eq('open_library_key', openLibraryKey)
-      .maybeSingle();
-    if (data) return data;
+
+  const { data, count, error } = await query.limit(1);
+  if (error) throw error;
+  return { count: count ?? 0, sample: data?.[0] ?? null };
+}
+
+export async function createBookCopies(payload, count = 1) {
+  const copies = Math.min(Math.max(1, count), 20);
+  const books = [];
+  for (let i = 0; i < copies; i += 1) {
+    books.push(await createBook(payload));
   }
-  return null;
+  return books;
 }
 
 export async function createBook(payload) {
@@ -116,4 +143,15 @@ export async function getBooksByIds(ids) {
   const { data, error } = await client.from('books').select('*').in('id', ids).order('title');
   if (error) throw error;
   return data ?? [];
+}
+
+export async function deleteBook(id) {
+  const client = requireClient();
+  const book = await getBookById(id);
+  if (!book) throw new Error('Book not found.');
+  if (book.status === 'checked_out') {
+    throw new Error('Return this book before removing it from the library.');
+  }
+  const { error } = await client.from('books').delete().eq('id', id);
+  if (error) throw error;
 }

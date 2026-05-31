@@ -8,9 +8,10 @@ import { Stack } from '../components/ui/Stack.jsx';
 import { Text } from '../components/ui/Text.jsx';
 import { SupabaseBanner } from '../components/layout/SupabaseBanner.jsx';
 import { PageContainer } from '../components/layout/PageContainer.jsx';
-import { getBookById } from '../lib/books.js';
+import { getBookById, deleteBook } from '../lib/books.js';
 import { getActiveCheckoutForBook, enrichCheckout } from '../lib/checkouts.js';
 import { getOverdueDays } from '../lib/settings.js';
+import { isTeacherLoggedIn } from '../lib/teacherSession.js';
 
 export default function BookDetailPage() {
   const { id } = useParams();
@@ -19,6 +20,8 @@ export default function BookDetailPage() {
   const [checkout, setCheckout] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [removing, setRemoving] = useState(false);
+  const isTeacher = isTeacherLoggedIn();
 
   useEffect(() => {
     let cancelled = false;
@@ -54,6 +57,26 @@ export default function BookDetailPage() {
 
   function printLabel() {
     navigate(`/teacher/labels/print?ids=${book.id}`);
+  }
+
+  async function handleRemove() {
+    if (
+      !confirm(
+        `Remove "${book.title}" from the library? This cannot be undone. Checkout history will also be deleted.`,
+      )
+    ) {
+      return;
+    }
+    setRemoving(true);
+    setError('');
+    try {
+      await deleteBook(book.id);
+      navigate('/browse', { replace: true });
+    } catch (err) {
+      setError(err.message ?? 'Failed to remove book');
+    } finally {
+      setRemoving(false);
+    }
   }
 
   if (loading) {
@@ -123,6 +146,12 @@ export default function BookDetailPage() {
         <Button variant="secondary" fullWidth onClick={printLabel}>
           Re-print label
         </Button>
+        {isTeacher ? (
+          <Button variant="ghost" fullWidth loading={removing} onClick={handleRemove}>
+            Remove from library
+          </Button>
+        ) : null}
+        {error ? <Text style={{ color: 'var(--color-overdue)' }}>{error}</Text> : null}
         <Link to="/browse" style={{ textAlign: 'center' }}>
           <Text variant="emphasis" style={{ color: 'var(--color-primary)' }}>
             Back to browse

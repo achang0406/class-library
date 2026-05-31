@@ -1,16 +1,38 @@
 import { useEffect, useRef, useState } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { Text } from '../ui/Text.jsx';
 import { Button } from '../ui/Button.jsx';
 
 const SCANNER_ID = 'cl-barcode-scanner';
 
-export function BarcodeScanner({ onScan, active = true }) {
+const SCAN_MODES = {
+  qr: {
+    formats: undefined,
+    qrbox: { width: 260, height: 260 },
+    hint: 'Point camera at the QR sticker on the book',
+  },
+  isbn: {
+    formats: [Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8],
+    qrbox: { width: 280, height: 120 },
+    hint: 'Point camera at the ISBN barcode on the back cover',
+  },
+};
+
+export function BarcodeScanner({
+  onScan,
+  active = true,
+  scannerId = SCANNER_ID,
+  mode = 'qr',
+}) {
   const [error, setError] = useState('');
   const [running, setRunning] = useState(false);
   const scannerRef = useRef(null);
   const handledRef = useRef(false);
   const onScanRef = useRef(onScan);
+  const modeConfig = SCAN_MODES[mode] ?? SCAN_MODES.qr;
+  const scanFormats = modeConfig.formats;
+  const scanQrbox = modeConfig.qrbox;
+  const scanHint = modeConfig.hint;
 
   useEffect(() => {
     onScanRef.current = onScan;
@@ -24,15 +46,19 @@ export function BarcodeScanner({ onScan, active = true }) {
 
     async function start() {
       try {
-        const scanner = new Html5Qrcode(SCANNER_ID);
+        const config = scanFormats
+          ? { verbose: false, formatsToSupport: scanFormats }
+          : { verbose: false };
+        const scanner = new Html5Qrcode(scannerId, config);
         scannerRef.current = scanner;
         await scanner.start(
           { facingMode: 'environment' },
-          { fps: 10, qrbox: { width: 260, height: 260 } },
+          { fps: 10, qrbox: scanQrbox },
           (decoded) => {
             if (handledRef.current) return;
             handledRef.current = true;
-            onScanRef.current(decoded.trim().toUpperCase());
+            const value = mode === 'qr' ? decoded.trim().toUpperCase() : decoded.trim();
+            onScanRef.current(value);
           },
           () => {},
         );
@@ -56,15 +82,15 @@ export function BarcodeScanner({ onScan, active = true }) {
         scanner.stop().catch(() => {});
       }
     };
-  }, [active]);
+  }, [active, scannerId, mode, scanFormats, scanQrbox]);
 
   return (
     <div style={{ width: '100%' }}>
       <div
-        id={SCANNER_ID}
+        id={scannerId}
         style={{
           width: '100%',
-          minHeight: 240,
+          minHeight: mode === 'isbn' ? 200 : 240,
           borderRadius: 'var(--radius-md)',
           overflow: 'hidden',
           border: '2px dashed var(--color-primary)',
@@ -78,29 +104,29 @@ export function BarcodeScanner({ onScan, active = true }) {
           variant="label"
           style={{ marginTop: 'var(--space-2)', textAlign: 'center', display: 'block' }}
         >
-          {running ? 'Point camera at the QR sticker on the book' : 'Starting camera…'}
+          {running ? scanHint : 'Starting camera…'}
         </Text>
       )}
     </div>
   );
 }
 
-export function ManualBarcodeEntry({ onSubmit }) {
+export function ManualBarcodeEntry({ onSubmit, placeholder = 'LIB-000001', label = 'Or enter barcode manually' }) {
   const [value, setValue] = useState('');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
-      <Text variant="label">Or enter barcode manually</Text>
+      <Text variant="label">{label}</Text>
       <input
         value={value}
-        onChange={(e) => setValue(e.target.value.toUpperCase())}
-        placeholder="LIB-000001"
+        onChange={(e) => setValue(e.target.value)}
+        placeholder={placeholder}
         style={{
           minHeight: 44,
           padding: 'var(--space-2) var(--space-3)',
           borderRadius: 'var(--radius-sm)',
           border: '1px solid var(--color-border)',
-          fontFamily: 'var(--font-mono)',
+          fontFamily: placeholder.startsWith('LIB') ? 'var(--font-mono)' : 'inherit',
         }}
       />
       <Button
@@ -117,11 +143,11 @@ export function ManualBarcodeEntry({ onSubmit }) {
   );
 }
 
-export function BarcodeScannerPanel({ onScan, onCancel, active = true }) {
+export function BarcodeScannerPanel({ onScan, onCancel, active = true, mode = 'qr' }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-      <BarcodeScanner onScan={onScan} active={active} />
-      <ManualBarcodeEntry onSubmit={onScan} />
+      <BarcodeScanner onScan={onScan} active={active} mode={mode} />
+      {mode === 'qr' ? <ManualBarcodeEntry onSubmit={onScan} /> : null}
       {onCancel ? (
         <Button variant="ghost" fullWidth onClick={onCancel}>
           Cancel

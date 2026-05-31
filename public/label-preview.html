@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Label print preview — Class Library</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 1.5rem;
+        background: #f0f0f0;
+        color: #1b4332;
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin: 0 0 0.5rem;
+      }
+      p.meta {
+        margin: 0 0 1.5rem;
+        color: #52796f;
+        font-size: 0.9rem;
+      }
+      .sheet-wrap {
+        background: white;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+        width: 8.5in;
+        min-height: 11in;
+        margin: 0 auto 2rem;
+        padding: 0.15in;
+      }
+      .sheet-title {
+        font-size: 10px;
+        color: #888;
+        text-align: center;
+        margin-bottom: 0.1in;
+      }
+      /* Matches src/styles/printLabels.css.js — compact Avery-style grid */
+      .label-print-area {
+        display: grid;
+        grid-template-columns: repeat(3, 2.625in);
+        grid-auto-rows: 1in;
+        gap: 0;
+        width: 100%;
+      }
+      .label-sticker {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 5px;
+        overflow: hidden;
+        height: 1in;
+        width: 2.625in;
+        border: 1px dashed #ccc;
+      }
+      .label-qr {
+        width: 0.72in;
+        height: 0.72in;
+        flex-shrink: 0;
+        background: #111;
+        image-rendering: pixelated;
+      }
+      .label-text {
+        flex: 1;
+        min-width: 0;
+        line-height: 1.12;
+      }
+      .label-title {
+        font-size: 8px;
+        font-weight: 700;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .label-author {
+        font-size: 7px;
+        color: #52796f;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .label-barcode {
+        font-size: 6px;
+        font-family: monospace;
+        margin-top: 1px;
+      }
+      @media print {
+        body {
+          background: white;
+          padding: 0;
+        }
+        .no-print {
+          display: none;
+        }
+        .sheet-wrap {
+          box-shadow: none;
+          padding: 0.15in;
+        }
+        .label-sticker {
+          border: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="no-print">
+      <h1>Label sheet preview</h1>
+      <p class="meta">
+        Sample layout — 3×10 grid (30 labels per letter page, Avery 5160–compatible). Dashed
+        borders are for preview only; they do not print. Open this file while running
+        <code>npm run dev</code> at
+        <a href="/label-preview.html">localhost:5173/label-preview.html</a>
+      </p>
+    </div>
+    <div class="sheet-wrap">
+      <div class="sheet-title no-print">US Letter 8.5″ × 11″ — 30 labels per sheet</div>
+      <div class="label-print-area" id="labels"></div>
+    </div>
+    <script type="module">
+      import QRCode from 'https://esm.sh/qrcode@1.5.4';
+
+      const books = [
+        { title: "Charlotte's Web", author: 'E.B. White', barcode: 'LIB-000001' },
+        { title: "Charlotte's Web", author: 'E.B. White', barcode: 'LIB-000002' },
+        { title: "Charlotte's Web", author: 'E.B. White', barcode: 'LIB-000003' },
+        { title: 'The Very Hungry Caterpillar', author: 'Eric Carle', barcode: 'LIB-000004' },
+        { title: 'Where the Wild Things Are', author: 'Maurice Sendak', barcode: 'LIB-000005' },
+        { title: 'Goodnight Moon', author: 'Margaret Wise Brown', barcode: 'LIB-000006' },
+        { title: 'Diary of a Wimpy Kid', author: 'Jeff Kinney', barcode: 'LIB-000007' },
+        { title: 'Wonder', author: 'R.J. Palacio', barcode: 'LIB-000008' },
+        { title: 'The One and Only Ivan', author: 'Katherine Applegate', barcode: 'LIB-000009' },
+      ];
+
+      const root = document.getElementById('labels');
+      for (const book of books) {
+        const qr = await QRCode.toDataURL(book.barcode, { margin: 0, width: 96 });
+        const el = document.createElement('div');
+        el.className = 'label-sticker';
+        el.innerHTML = `
+          <img class="label-qr" src="${qr}" alt="" />
+          <div class="label-text">
+            <div class="label-title">${book.title}</div>
+            <div class="label-author">${book.author}</div>
+            <div class="label-barcode">${book.barcode}</div>
+          </div>`;
+        root.appendChild(el);
+      }
+    </script>
+  </body>
+</html>

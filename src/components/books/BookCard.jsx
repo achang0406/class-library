@@ -32,6 +32,14 @@ export function BookCard({ book }) {
           {book.title}
         </Text>
         <Text variant="label">{book.author ?? 'Unknown author'}</Text>
+        {book.activeCheckout ? (
+          <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
+            Out to {book.activeCheckout.borrower_name}
+            {book.activeCheckout.borrower_type !== 'student'
+              ? ` (${book.activeCheckout.borrower_type})`
+              : ''}
+          </Text>
+        ) : null}
         <Badge variant={badgeVariant}>
           {book.status === 'available' ? 'Available' : 'Checked out'}
         </Badge>

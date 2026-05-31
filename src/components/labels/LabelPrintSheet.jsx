@@ -11,7 +11,7 @@ export function LabelPrintSheet({ books, onPrinted }) {
     async function generate() {
       const entries = await Promise.all(
         books.map(async (book) => {
-          const dataUrl = await QRCode.toDataURL(book.barcode, { margin: 0, width: 120 });
+          const dataUrl = await QRCode.toDataURL(book.barcode, { margin: 0, width: 96 });
           return [book.id, dataUrl];
         }),
       );
@@ -42,6 +42,10 @@ export function LabelPrintSheet({ books, onPrinted }) {
       <style>{labelPrintStyles}</style>
       <div className="label-print-screen no-print">
         <p>Opening print dialog…</p>
+        <p className="label-print-preview-note">
+          Preview below — 30 labels per letter page (3 columns × 10 rows). Each copy of the same
+          title gets its own barcode.
+        </p>
       </div>
       <div className="label-print-area">
         {books.map((book) => (
