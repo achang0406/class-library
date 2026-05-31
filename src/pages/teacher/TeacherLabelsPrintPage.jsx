@@ -6,6 +6,7 @@ import { Spinner } from '../../components/ui/Spinner.jsx';
 import { Stack } from '../../components/ui/Stack.jsx';
 import { Text } from '../../components/ui/Text.jsx';
 import { getBooksByIds } from '../../lib/books.js';
+import { AVERY_5658 } from '../../constants/avery5658.js';
 
 export default function TeacherLabelsPrintPage() {
   const [searchParams] = useSearchParams();
@@ -79,8 +80,11 @@ export default function TeacherLabelsPrintPage() {
             Print {books.length} label{books.length === 1 ? '' : 's'}
           </Text>
           <Text variant="body" style={{ color: 'var(--color-text-muted)' }}>
-            Your browser print dialog will open automatically. Match stickers to books by title on
-            each label.
+            Your browser print dialog will open automatically. Load{' '}
+            <a href={AVERY_5658.productUrl} target="_blank" rel="noopener noreferrer">
+              Avery 5658
+            </a>{' '}
+            blank sheets (1″ × 1″). Use the on-screen match list to pair stickers with books.
           </Text>
           <Button variant="secondary" onClick={() => navigate('/teacher/labels')}>
             Cancel

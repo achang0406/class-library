@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Avery 5160 label preview — Class Library</title>
+    <title>Avery 5658 label preview — Class Library</title>
     <style>
       * {
         box-sizing: border-box;
@@ -25,6 +25,10 @@
         max-width: 40rem;
         line-height: 1.45;
       }
+      p.meta a {
+        color: #1b4332;
+        font-weight: 600;
+      }
       .label-print-pages {
         display: flex;
         flex-direction: column;
@@ -40,21 +44,21 @@
       .label-print-area {
         width: 100%;
         height: 100%;
-        padding: 0.5in 0.21875in 0.5in 0.15625in;
+        padding: 0.625in;
         display: grid;
-        grid-template-columns: repeat(3, 2.625in);
-        column-gap: 0.125in;
+        grid-template-columns: repeat(6, 1in);
+        column-gap: 0.25in;
         grid-auto-rows: 1in;
-        row-gap: 0;
+        row-gap: 0.25in;
       }
       .label-sticker {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        padding: 1px 2px;
+        padding: 0 1px;
         overflow: hidden;
-        width: 2.625in;
+        width: 1in;
         height: 1in;
         outline: 1px dashed #ccc;
       }
@@ -66,12 +70,15 @@
         flex-shrink: 0;
       }
       .label-barcode {
-        font-size: 7px;
+        font-size: 6px;
         font-family: monospace;
         font-weight: 600;
         line-height: 1;
-        margin-top: 1px;
         text-align: center;
+        letter-spacing: -0.02em;
+        max-width: 100%;
+        overflow: hidden;
+        white-space: nowrap;
       }
       @media print {
         @page {
@@ -97,10 +104,14 @@
   </head>
   <body>
     <div class="no-print">
-      <h1>Avery 5160 label preview</h1>
+      <h1>Avery 5658 label preview</h1>
       <p class="meta">
-        Stacked layout: <strong>0.8″ QR</strong> with <strong>LIB- id below</strong> (no title on
-        sticker). Fits Avery 5160 at 100% scale. Sample shows 9 label positions.
+        Stacked layout: <strong>0.8″ QR</strong> with <strong>LIB- id below</strong> on
+        <strong>1″ × 1″</strong>
+        <a href="https://www.avery.com/products/labels/5658" target="_blank" rel="noopener noreferrer"
+          >Avery 5658</a
+        >
+        squares (48 per sheet). Print at 100% scale. Sample shows 12 label positions.
       </p>
     </div>
     <div class="label-print-pages">
@@ -121,6 +132,9 @@
         { title: 'Diary of a Wimpy Kid', author: 'Jeff Kinney', barcode: 'LIB-000007' },
         { title: 'Wonder', author: 'R.J. Palacio', barcode: 'LIB-000008' },
         { title: 'The One and Only Ivan', author: 'Katherine Applegate', barcode: 'LIB-000009' },
+        { title: 'Hatchet', author: 'Gary Paulsen', barcode: 'LIB-000010' },
+        { title: 'Holes', author: 'Louis Sachar', barcode: 'LIB-000011' },
+        { title: 'Matilda', author: 'Roald Dahl', barcode: 'LIB-000012' },
       ];
 
       const root = document.getElementById('labels');

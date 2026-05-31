@@ -1,4 +1,4 @@
-import { AVERY_5160 } from '../constants/avery5160.js';
+import { AVERY_5658 } from '../constants/avery5658.js';
 
 const {
   sheetWidth,
@@ -6,13 +6,16 @@ const {
   labelWidth,
   labelHeight,
   marginTop,
+  marginBottom,
   marginLeft,
   marginRight,
   columnGap,
+  rowGap,
+  columns,
   qrSize,
-} = AVERY_5160;
+} = AVERY_5658;
 
-/** Avery 5160 — stacked QR (0.8" min) + LIB id below. Titles shown in on-screen match list only. */
+/** Avery 5658 — stacked QR (0.8" min) + LIB id below. Titles shown in on-screen match list only. */
 export const labelPrintStyles = `
 @media screen {
   .label-print-screen {
@@ -122,12 +125,12 @@ export const labelPrintStyles = `
   box-sizing: border-box;
   width: 100%;
   height: 100%;
-  padding: ${marginTop} ${marginRight} ${marginTop} ${marginLeft};
+  padding: ${marginTop} ${marginRight} ${marginBottom} ${marginLeft};
   display: grid;
-  grid-template-columns: repeat(3, ${labelWidth});
+  grid-template-columns: repeat(${columns}, ${labelWidth});
   column-gap: ${columnGap};
   grid-auto-rows: ${labelHeight};
-  row-gap: 0;
+  row-gap: ${rowGap};
 }
 
 .label-sticker {
@@ -135,7 +138,7 @@ export const labelPrintStyles = `
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 1px 2px;
+  padding: 0 1px;
   overflow: hidden;
   box-sizing: border-box;
   width: ${labelWidth};
@@ -152,12 +155,15 @@ export const labelPrintStyles = `
 }
 
 .label-barcode {
-  font-size: 7px;
+  font-size: 6px;
   font-family: monospace;
   font-weight: 600;
   line-height: 1;
-  margin-top: 1px;
+  margin-top: 0;
   text-align: center;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.02em;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
 }
 `;

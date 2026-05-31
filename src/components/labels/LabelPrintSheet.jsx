@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import QRCode from 'qrcode';
 import { markLabelsPrinted } from '../../lib/books.js';
-import { AVERY_5160, chunkForLabelSheets } from '../../constants/avery5160.js';
+import { AVERY_5658, chunkForLabelSheets } from '../../constants/avery5658.js';
 import { labelPrintStyles } from '../../styles/printLabels.css.js';
 
 /** ~240px renders sharply at 0.8in on typical laser/inkjet printers. */
@@ -60,9 +60,12 @@ export function LabelPrintSheet({ books, onPrinted }) {
       <div className="label-print-screen no-print">
         <p>Opening print dialog…</p>
         <p className="label-print-preview-note">
-          Avery 5160 — {pages.length} sheet{pages.length === 1 ? '' : 's'} of stickers (
-          {AVERY_5160.qrSize} QR + id below). Print at <strong>100% scale</strong>, margins none.
-          Use the match list below to apply stickers; it does not print.
+          <a href={AVERY_5658.productUrl} target="_blank" rel="noopener noreferrer">
+            Avery 5658
+          </a>{' '}
+          — {pages.length} sheet{pages.length === 1 ? '' : 's'} of stickers ({AVERY_5658.qrSize} QR
+          + id below). Print at <strong>100% scale</strong>, margins none. Use the match list
+          below to apply stickers; it does not print.
         </p>
         <div className="label-print-match-list">
           <h3>Match stickers to books ({books.length})</h3>

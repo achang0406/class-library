@@ -6,6 +6,7 @@ import { Text } from '../../components/ui/Text.jsx';
 import { BookCover } from '../../components/ui/BookCover.jsx';
 import { SupabaseBanner } from '../../components/layout/SupabaseBanner.jsx';
 import { PageContainer } from '../../components/layout/PageContainer.jsx';
+import { AVERY_5658 } from '../../constants/avery5658.js';
 import { useBooks } from '../../hooks/useBooks.js';
 
 export default function TeacherLabelsPage() {
@@ -44,8 +45,12 @@ export default function TeacherLabelsPage() {
       <Stack gap="var(--space-4)">
         <SupabaseBanner />
         <Text variant="body" style={{ color: 'var(--color-text-muted)' }}>
-          Each sticker is a 0.8″ QR with LIB- id below. Use the on-screen match list when printing
-          to pair stickers with books.
+          Each sticker is a 0.8″ QR with LIB- id below on{' '}
+          <a href={AVERY_5658.productUrl} target="_blank" rel="noopener noreferrer">
+            Avery 5658
+          </a>{' '}
+          sheets (1″ × 1″, 48 per page). Use the on-screen match list when printing to pair
+          stickers with books.
         </Text>
         <Stack gap="var(--space-2)" style={{ flexDirection: 'row' }}>
           <Button
