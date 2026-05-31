@@ -1,0 +1,50 @@
+import { COLORS } from './colors.js';
+import { BP_LG_MIN, BP_MD_MIN, BP_SM_MIN, BP_XL_MIN } from '../constants/breakpoints.js';
+
+export const TOKENS = {
+  '--color-primary': COLORS.primary,
+  '--color-primary-hover': COLORS.primaryHover,
+  '--color-accent': COLORS.accent,
+  '--color-surface': COLORS.surface,
+  '--color-card': COLORS.card,
+  '--color-text': COLORS.text,
+  '--color-text-muted': COLORS.textMuted,
+  '--color-available': COLORS.available,
+  '--color-checked-out': COLORS.checkedOut,
+  '--color-overdue': COLORS.overdue,
+  '--color-border': COLORS.border,
+  '--color-input-bg': COLORS.inputBg,
+  '--space-1': '4px',
+  '--space-2': '8px',
+  '--space-3': '12px',
+  '--space-4': '16px',
+  '--space-5': '24px',
+  '--space-6': '32px',
+  '--space-8': '48px',
+  '--radius-sm': '8px',
+  '--radius-md': '12px',
+  '--radius-lg': '14px',
+  '--radius-pill': '999px',
+  '--font-label': '11px',
+  '--font-body': '14px',
+  '--font-emphasis': '16px',
+  '--font-title': '20px',
+  '--font-display': '28px',
+  '--font-sans': "'Nunito', sans-serif",
+  '--font-mono': "'JetBrains Mono', monospace",
+  '--bp-sm-min': `${BP_SM_MIN}px`,
+  '--bp-md-min': `${BP_MD_MIN}px`,
+  '--bp-lg-min': `${BP_LG_MIN}px`,
+  '--bp-xl-min': `${BP_XL_MIN}px`,
+  '--layout-gutter': 'var(--space-4)',
+  '--layout-stack-gap': 'var(--space-4)',
+  '--max-content': '720px',
+  '--z-modal': '200',
+  '--z-toast': '100',
+  '--safe-area-top': 'env(safe-area-inset-top, 0px)',
+  '--safe-area-bottom': 'env(safe-area-inset-bottom, 0px)',
+};
+
+export const TOKEN_CSS = Object.entries(TOKENS)
+  .map(([key, value]) => `${key}: ${value};`)
+  .join('\n    ');
