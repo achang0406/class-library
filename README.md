@@ -1,52 +1,120 @@
 # Class Library
 
-Mobile-first PWA for cataloging a classroom library — custom barcode labels, Open Library metadata, browse filters, and a checkout kiosk for students, staff, and guests.
+Mobile-first PWA for cataloging a classroom library — custom QR barcode labels (with title + author on each sticker), Open Library metadata autosuggest, browse filters, checkout kiosk for students/staff/guests, and teacher tools.
 
 ## Stack
 
 - React 19 + Vite + React Router
 - Supabase (PostgreSQL)
 - PWA (`vite-plugin-pwa`)
-- Design system with CSS custom property tokens
+- Open Library API (covers + metadata)
+- `qrcode` + `html5-qrcode`
 
 ## Setup
 
+### 1. Supabase
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. Open **SQL Editor** and run [`supabase/migrations/001_schema.sql`](supabase/migrations/001_schema.sql).
+3. Copy **Project URL** and **anon public** key from Settings → API.
+
+### 2. Environment
+
 ```bash
 cp .env.example .env.local
-# Edit .env.local with Supabase URL, anon key, and teacher password
+```
 
+Edit `.env.local`:
+
+```env
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_TEACHER_PASSWORD=choose-a-classroom-password
+```
+
+### 3. Install & run
+
+```bash
 npm install
 npm run dev
 ```
 
+Open http://localhost:5173
+
+### 4. Seed sample data (optional)
+
+```bash
+npm run db:seed
+```
+
 ## Scripts
 
-| Command | Description |
-| ------- | ----------- |
-| `npm run dev` | Start dev server |
-| `npm run build` | Production build |
-| `npm run lint` | ESLint |
-| `npm run lint:fix` | ESLint with auto-fix |
-| `npm run format` | Prettier write |
-| `npm run format:check` | Prettier check |
+| Command                | Description                   |
+| ---------------------- | ----------------------------- |
+| `npm run dev`          | Dev server                    |
+| `npm run build`        | Production build              |
+| `npm run preview`      | Preview production build      |
+| `npm run lint`         | ESLint                        |
+| `npm run lint:fix`     | ESLint auto-fix               |
+| `npm run format`       | Prettier write                |
+| `npm run format:check` | Prettier check                |
+| `npm run db:seed`      | Seed sample books & borrowers |
+
+## Deploy (Vercel + Supabase)
+
+1. Push repo to GitHub.
+2. Import project in [Vercel](https://vercel.com) — framework preset **Vite**.
+3. Add environment variables (same as `.env.local`).
+4. Deploy. `vercel.json` handles SPA routing.
+
+Supabase stays on the free tier for a single classroom; no extra backend required.
+
+## Install on iPad (PWA)
+
+1. Open the deployed site in **Safari**.
+2. Tap **Share** → **Add to Home Screen**.
+3. Use **Check Out / Return** from the home screen icon for kiosk mode.
+
+Camera scanning requires **HTTPS** (Vercel provides this).
+
+## Routes
+
+| Route                         | Description                     |
+| ----------------------------- | ------------------------------- |
+| `/`                           | Landing                         |
+| `/browse`                     | Browse & filter library         |
+| `/books/:id`                  | Book detail                     |
+| `/kiosk`                      | Student/staff checkout & return |
+| `/teacher`                    | Teacher login                   |
+| `/teacher/dashboard`          | Stats & links                   |
+| `/teacher/add`                | Add book (Open Library search)  |
+| `/teacher/add?mode=rapid`     | Rapid Add + batch labels        |
+| `/teacher/labels`             | Select books → print            |
+| `/teacher/labels/print?ids=…` | Print label sheet               |
+| `/teacher/people`             | Class roster + staff            |
+| `/teacher/overdue`            | Overdue loans                   |
+| `/teacher/import`             | CSV bulk import                 |
 
 ## Project structure
 
 ```
 src/
-  components/ui/     # Atomic design system components
-  components/layout/ # App shell, header, page container
-  pages/             # Route pages
-  styles/            # tokens, colors, theme
-  lib/               # Supabase client, teacher session
+  components/ui/       Design system
+  components/books/    Book grid, Open Library search
+  components/scanner/  QR camera scanner
+  components/labels/   Printable Avery-style labels
+  pages/               Route pages
+  lib/                 Supabase, Open Library, checkouts
+supabase/migrations/   SQL schema
+scripts/seed.mjs       Sample data
 ```
 
-## Routes
+## Label workflow
 
-- `/` — Landing
-- `/browse` — Browse library
-- `/books/:id` — Book detail
-- `/kiosk` — Checkout / return kiosk
-- `/teacher` — Teacher login
-- `/teacher/dashboard` — Teacher dashboard (protected)
-- `/teacher/add`, `/labels`, `/people`, `/overdue`, `/import`
+1. **Add book** → barcode assigned automatically (`LIB-000001`, …).
+2. **Print labels** → each sticker shows QR + **title + author** + barcode ID.
+3. Match stickers to books by reading the title — no stack order needed.
+
+## Teacher password
+
+The teacher password is checked client-side (`VITE_TEACHER_PASSWORD`). It keeps casual visitors out of admin screens; the Supabase anon key is still required for data access. Use an unlisted URL for the classroom.

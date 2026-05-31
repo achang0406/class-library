@@ -1,16 +1,24 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button.jsx';
 import { Input } from '../../components/ui/Input.jsx';
 import { Stack } from '../../components/ui/Stack.jsx';
 import { Text } from '../../components/ui/Text.jsx';
 import { PageContainer } from '../../components/layout/PageContainer.jsx';
-import { setTeacherLoggedIn, verifyTeacherPassword } from '../../lib/teacherSession.js';
+import {
+  isTeacherLoggedIn,
+  setTeacherLoggedIn,
+  verifyTeacherPassword,
+} from '../../lib/teacherSession.js';
 
 export default function TeacherLoginPage() {
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+
+  if (isTeacherLoggedIn()) {
+    return <Navigate to="/teacher/dashboard" replace />;
+  }
 
   function handleSubmit(e) {
     e.preventDefault();
