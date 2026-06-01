@@ -67,8 +67,8 @@ export function IsbnScanPanel({ onLookup, onCancel, busy = false, error = '' }) 
       <Stack gap="var(--space-1)">
         <Text variant="emphasis">Scan ISBN on back cover</Text>
         <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
-          Live scan reads the barcode automatically. If that fails, capture the printed ISBN text
-          instead — not your LIB- checkout sticker.
+          Live scan reads the barcode automatically. Tap the preview to focus, or hold 8–12″ back if
+          blurry. Use Capture ISBN for printed numbers — not your LIB- checkout sticker.
         </Text>
       </Stack>
 

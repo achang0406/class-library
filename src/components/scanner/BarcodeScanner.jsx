@@ -2,9 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { Text } from '../ui/Text.jsx';
 import { Button } from '../ui/Button.jsx';
+import { Stack } from '../ui/Stack.jsx';
+import {
+  applyTapFocus,
+  getScannerVideoTrack,
+  normalizedPointFromTap,
+  supportsTapFocus,
+} from '../../lib/cameraFocus.js';
 
 const SCANNER_ID = 'cl-barcode-scanner';
 const SCAN_COOLDOWN_MS = 1200;
+const FOCUS_RING_MS = 900;
 
 const ISBN_BARCODE_FORMATS = [
   Html5QrcodeSupportedFormats.EAN_13,
@@ -14,18 +22,27 @@ const ISBN_BARCODE_FORMATS = [
   Html5QrcodeSupportedFormats.CODE_128,
 ];
 
+const DEFAULT_CAMERA_CONSTRAINTS = { facingMode: 'environment' };
+
 const SCAN_MODES = {
   qr: {
     formats: undefined,
     qrbox: { width: 260, height: 260 },
     fps: 10,
     hint: 'Point camera at the QR sticker on the book',
+    cameraConstraints: DEFAULT_CAMERA_CONSTRAINTS,
   },
   isbn: {
     formats: ISBN_BARCODE_FORMATS,
     qrbox: undefined,
     fps: 15,
-    hint: 'Fill the frame with the ISBN barcode or printed ISBN number',
+    hint: 'Hold 8–12″ back, tap the barcode to focus, or use Capture ISBN below',
+    cameraConstraints: {
+      facingMode: 'environment',
+      focusMode: { ideal: 'continuous' },
+      width: { ideal: 1920 },
+      height: { ideal: 1080 },
+    },
   },
 };
 
@@ -37,7 +54,11 @@ export function BarcodeScanner({
 }) {
   const [error, setError] = useState('');
   const [running, setRunning] = useState(false);
+  const [focusRing, setFocusRing] = useState(null);
+  const [tapFocusSupported, setTapFocusSupported] = useState(null);
   const scannerRef = useRef(null);
+  const viewportRef = useRef(null);
+  const focusTimerRef = useRef(null);
   const handledRef = useRef(false);
   const onScanRef = useRef(onScan);
   const modeConfig = SCAN_MODES[mode] ?? SCAN_MODES.qr;
@@ -45,6 +66,7 @@ export function BarcodeScanner({
   const scanQrbox = modeConfig.qrbox;
   const scanFps = modeConfig.fps;
   const scanHint = modeConfig.hint;
+  const tapToFocusEnabled = mode === 'isbn' && running;
 
   useEffect(() => {
     onScanRef.current = onScan;
@@ -74,7 +96,7 @@ export function BarcodeScanner({
         };
 
         await scanner.start(
-          { facingMode: 'environment' },
+          modeConfig.cameraConstraints,
           cameraConfig,
           (decoded) => {
             if (handledRef.current) return;
@@ -87,7 +109,12 @@ export function BarcodeScanner({
           },
           () => {},
         );
-        if (!cancelled) setRunning(true);
+
+        if (!cancelled) {
+          setRunning(true);
+          const track = getScannerVideoTrack(scannerId);
+          setTapFocusSupported(track ? supportsTapFocus(track) : false);
+        }
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -101,36 +128,105 @@ export function BarcodeScanner({
 
     return () => {
       cancelled = true;
+      setRunning(false);
+      setTapFocusSupported(null);
+      if (focusTimerRef.current) {
+        window.clearTimeout(focusTimerRef.current);
+        focusTimerRef.current = null;
+      }
       const scanner = scannerRef.current;
       scannerRef.current = null;
       if (scanner?.isScanning) {
         scanner.stop().catch(() => {});
       }
     };
-  }, [active, scannerId, mode, scanFormats, scanQrbox, scanFps]);
+  }, [active, scannerId, mode, modeConfig, scanFormats, scanQrbox, scanFps]);
+
+  async function handleTapFocus(event) {
+    if (!tapToFocusEnabled || !viewportRef.current) return;
+
+    const container = viewportRef.current;
+    const point = normalizedPointFromTap(container, event.clientX, event.clientY);
+    const ringX = event.clientX - container.getBoundingClientRect().left;
+    const ringY = event.clientY - container.getBoundingClientRect().top;
+
+    setFocusRing({ x: ringX, y: ringY });
+    if (focusTimerRef.current) window.clearTimeout(focusTimerRef.current);
+    focusTimerRef.current = window.setTimeout(() => {
+      setFocusRing(null);
+      focusTimerRef.current = null;
+    }, FOCUS_RING_MS);
+
+    const track = getScannerVideoTrack(scannerId);
+    if (!track) return;
+    await applyTapFocus(track, point);
+  }
 
   return (
     <div style={{ width: '100%' }}>
       <div
-        id={scannerId}
+        ref={viewportRef}
         style={{
+          position: 'relative',
           width: '100%',
-          minHeight: mode === 'isbn' ? 240 : 240,
+          minHeight: 240,
           borderRadius: 'var(--radius-md)',
           overflow: 'hidden',
           border: '2px dashed var(--color-primary)',
           background: 'var(--color-card)',
         }}
-      />
+      >
+        <div id={scannerId} style={{ width: '100%', minHeight: 240 }} />
+        {tapToFocusEnabled ? (
+          <button
+            type="button"
+            aria-label="Tap to focus camera on this spot"
+            onPointerDown={handleTapFocus}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              margin: 0,
+              padding: 0,
+              border: 'none',
+              background: 'transparent',
+              cursor: 'crosshair',
+              touchAction: 'manipulation',
+            }}
+          />
+        ) : null}
+        {focusRing ? (
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute',
+              left: focusRing.x,
+              top: focusRing.y,
+              width: 56,
+              height: 56,
+              transform: 'translate(-50%, -50%)',
+              border: '2px solid var(--color-accent)',
+              borderRadius: 'var(--radius-sm)',
+              boxShadow: '0 0 0 1px rgba(0,0,0,0.25)',
+              pointerEvents: 'none',
+            }}
+          />
+        ) : null}
+      </div>
       {error ? (
         <Text style={{ color: 'var(--color-overdue)', marginTop: 'var(--space-3)' }}>{error}</Text>
       ) : (
-        <Text
-          variant="label"
-          style={{ marginTop: 'var(--space-2)', textAlign: 'center', display: 'block' }}
-        >
-          {running ? scanHint : 'Starting camera…'}
-        </Text>
+        <Stack gap="var(--space-1)" style={{ marginTop: 'var(--space-2)' }}>
+          <Text variant="label" style={{ textAlign: 'center', display: 'block' }}>
+            {running ? scanHint : 'Starting camera…'}
+          </Text>
+          {running && mode === 'isbn' ? (
+            <Text variant="label" style={{ color: 'var(--color-text-muted)', textAlign: 'center' }}>
+              {tapFocusSupported === false
+                ? 'This device uses automatic focus — move back if the image is blurry.'
+                : 'Tap the preview to focus on the barcode or ISBN text.'}
+            </Text>
+          ) : null}
+        </Stack>
       )}
     </div>
   );
