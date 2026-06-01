@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Text } from '../ui/Text.jsx';
+import { TeacherModeBadge } from './TeacherModeBadge.jsx';
 
 export function AppHeader({ title = 'Class Library', backTo }) {
   return (
@@ -18,9 +19,10 @@ export function AppHeader({ title = 'Class Library', backTo }) {
           ← Back
         </Link>
       ) : null}
-      <Text as="h1" variant="emphasis" style={{ flex: 1 }}>
+      <Text as="h1" variant="emphasis" style={{ flex: 1, minWidth: 0 }}>
         {title}
       </Text>
+      <TeacherModeBadge />
     </header>
   );
 }

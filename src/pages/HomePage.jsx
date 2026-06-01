@@ -4,16 +4,23 @@ import { Stack } from '../components/ui/Stack.jsx';
 import { Text } from '../components/ui/Text.jsx';
 import { PageContainer } from '../components/layout/PageContainer.jsx';
 import { InstallAppLink } from '../components/layout/InstallAppLink.jsx';
-import { TeacherModeBanner } from '../components/layout/TeacherModeBanner.jsx';
+import { TeacherModeBadge } from '../components/layout/TeacherModeBadge.jsx';
 
 export default function HomePage() {
   return (
-    <>
-      <TeacherModeBanner />
-      <PageContainer narrow>
+    <PageContainer narrow>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          paddingTop: 'var(--space-3)',
+        }}
+      >
+        <TeacherModeBadge />
+      </div>
       <Stack
         gap="var(--space-6)"
-        style={{ paddingTop: 'var(--space-8)', paddingBottom: 'var(--space-8)' }}
+        style={{ paddingTop: 'var(--space-4)', paddingBottom: 'var(--space-8)' }}
       >
         <Stack gap="var(--space-2)" align="center" style={{ textAlign: 'center' }}>
           <Text as="h1" variant="display">
@@ -43,6 +50,5 @@ export default function HomePage() {
         <InstallAppLink />
       </Stack>
     </PageContainer>
-    </>
   );
 }

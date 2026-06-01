@@ -135,4 +135,4 @@ scripts/seed.mjs       Sample data
 
 ## Teacher password
 
-The teacher passcode is checked client-side (`VITE_TEACHER_PASSCODE`, four digits). It keeps casual visitors out of admin screens; the Supabase anon key is still required for data access. Teacher mode auto-signs-out after 30 minutes idle and shows a banner on student-facing pages while active.
+The teacher passcode is checked client-side (`VITE_TEACHER_PASSCODE`, four digits). It keeps casual visitors out of admin screens; the Supabase anon key is still required for data access. Teacher mode auto-signs-out after 30 minutes idle and shows a **Teacher** badge in the header on student-facing pages while active (tap to sign out).
