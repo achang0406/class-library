@@ -74,23 +74,29 @@ async function readIsbnFromStillImage(file) {
   });
 
   try {
-    const decoded = await scanner.scanFile(file, false);
-    const fromBarcode = normalizeIsbn(decoded);
-    if (fromBarcode) return fromBarcode;
-  } catch {
-    // Fall through to OCR.
+    try {
+      const decoded = await scanner.scanFile(file, false);
+      const fromBarcode = normalizeIsbn(decoded);
+      if (fromBarcode) return fromBarcode;
+    } catch {
+      // Fall through to OCR.
+    }
+
+    const worker = await getOcrWorker();
+    const { data: { text } } = await worker.recognize(file);
+    const fromText = extractIsbnFromText(text);
+    if (fromText) return fromText;
+
+    throw new Error(
+      'No ISBN found. Center the barcode or printed ISBN number, hold steady, and try again.',
+    );
   } finally {
-    await scanner.clear().catch(() => {});
+    try {
+      scanner.clear();
+    } catch {
+      // scanFile may already clear the temp element.
+    }
   }
-
-  const worker = await getOcrWorker();
-  const { data: { text } } = await worker.recognize(file);
-  const fromText = extractIsbnFromText(text);
-  if (fromText) return fromText;
-
-  throw new Error(
-    'No ISBN found. Center the barcode or printed ISBN number, hold steady, and try again.',
-  );
 }
 
 /** Capture the live camera frame and read ISBN from barcode or printed text. */
