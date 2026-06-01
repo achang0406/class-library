@@ -8,7 +8,7 @@ import { Stack } from '../components/ui/Stack.jsx';
 import { Text } from '../components/ui/Text.jsx';
 import { SupabaseBanner } from '../components/layout/SupabaseBanner.jsx';
 import { PageContainer } from '../components/layout/PageContainer.jsx';
-import { getBookById, deleteBook } from '../lib/books.js';
+import { getBookById, deleteBook, markLabelsNeeded } from '../lib/books.js';
 import { getActiveCheckoutForBook, enrichCheckout } from '../lib/checkouts.js';
 import { getOverdueDays } from '../lib/settings.js';
 import { isTeacherLoggedIn } from '../lib/teacherSession.js';
@@ -21,6 +21,7 @@ export default function BookDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [removing, setRemoving] = useState(false);
+  const [labelBusy, setLabelBusy] = useState(false);
   const isTeacher = isTeacherLoggedIn();
 
   useEffect(() => {
@@ -57,6 +58,19 @@ export default function BookDetailPage() {
 
   function printLabel() {
     navigate(`/teacher/labels/print?ids=${book.id}`);
+  }
+
+  async function handleMarkNeedsLabel() {
+    setLabelBusy(true);
+    setError('');
+    try {
+      await markLabelsNeeded([book.id]);
+      setBook((b) => ({ ...b, label_printed_at: null }));
+    } catch (err) {
+      setError(err.message ?? 'Failed to update label status');
+    } finally {
+      setLabelBusy(false);
+    }
   }
 
   async function handleRemove() {
@@ -144,8 +158,13 @@ export default function BookDetailPage() {
           </Stack>
         ) : null}
         <Button variant="secondary" fullWidth onClick={printLabel}>
-          Re-print label
+          {book.label_printed_at ? 'Re-print label' : 'Print label'}
         </Button>
+        {isTeacher && book.label_printed_at ? (
+          <Button variant="ghost" fullWidth loading={labelBusy} onClick={handleMarkNeedsLabel}>
+            Mark as needs label
+          </Button>
+        ) : null}
         {isTeacher ? (
           <Button variant="ghost" fullWidth loading={removing} onClick={handleRemove}>
             Remove from library

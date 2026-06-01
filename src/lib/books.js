@@ -118,6 +118,15 @@ export async function markLabelsPrinted(bookIds) {
   if (error) throw error;
 }
 
+export async function markLabelsNeeded(bookIds) {
+  const client = requireClient();
+  const { error } = await client
+    .from('books')
+    .update({ label_printed_at: null })
+    .in('id', bookIds);
+  if (error) throw error;
+}
+
 export async function getBookStats() {
   const client = requireClient();
   const { data, error } = await client.from('books').select('status');

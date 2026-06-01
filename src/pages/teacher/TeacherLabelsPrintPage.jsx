@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { LabelPrintSheet } from '../../components/labels/LabelPrintSheet.jsx';
+import { LabelVerifyPanel } from '../../components/labels/LabelVerifyPanel.jsx';
 import { Button } from '../../components/ui/Button.jsx';
 import { Spinner } from '../../components/ui/Spinner.jsx';
 import { Stack } from '../../components/ui/Stack.jsx';
@@ -24,6 +25,7 @@ export default function TeacherLabelsPrintPage() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showVerify, setShowVerify] = useState(false);
 
   useEffect(() => {
     if (!ids.length) {
@@ -80,18 +82,30 @@ export default function TeacherLabelsPrintPage() {
             Print {books.length} label{books.length === 1 ? '' : 's'}
           </Text>
           <Text variant="body" style={{ color: 'var(--color-text-muted)' }}>
-            Your browser print dialog will open automatically. Load{' '}
-            <a href={AVERY_5658.productUrl} target="_blank" rel="noopener noreferrer">
-              Avery 5658
-            </a>{' '}
-            blank sheets (1″ × 1″). Use the on-screen match list to pair stickers with books.
+            {showVerify ? (
+              'Apply stickers using the match list, then scan each one below to clear the Needs label badge.'
+            ) : (
+              <>
+                Your browser print dialog will open automatically. Load{' '}
+                <a href={AVERY_5658.productUrl} target="_blank" rel="noopener noreferrer">
+                  Avery 5658
+                </a>{' '}
+                blank sheets (1″ × 1″). After printing, you&apos;ll confirm each sticker by scanning
+                it.
+              </>
+            )}
           </Text>
-          <Button variant="secondary" onClick={() => navigate('/teacher/labels')}>
-            Cancel
-          </Button>
+          {!showVerify ? (
+            <Button variant="secondary" onClick={() => navigate('/teacher/labels')}>
+              Cancel
+            </Button>
+          ) : null}
         </Stack>
       </div>
-      <LabelPrintSheet books={books} onPrinted={() => navigate('/teacher/labels')} />
+      {showVerify ? (
+        <LabelVerifyPanel books={books} onDone={() => navigate('/teacher/labels')} />
+      ) : null}
+      <LabelPrintSheet books={books} onPrintDialogOpened={() => setShowVerify(true)} />
     </>
   );
 }

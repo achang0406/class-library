@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import QRCode from 'qrcode';
-import { markLabelsPrinted } from '../../lib/books.js';
 import { AVERY_5658, chunkForLabelSheets } from '../../constants/avery5658.js';
 import { labelPrintStyles } from '../../styles/printLabels.css.js';
 
@@ -16,7 +15,7 @@ function LabelSticker({ book, qrSrc }) {
   );
 }
 
-export function LabelPrintSheet({ books, onPrinted }) {
+export function LabelPrintSheet({ books, onPrintDialogOpened }) {
   const [qrMap, setQrMap] = useState({});
   const pages = useMemo(() => chunkForLabelSheets(books), [books]);
 
@@ -42,17 +41,12 @@ export function LabelPrintSheet({ books, onPrinted }) {
 
   useEffect(() => {
     if (!books.length || Object.keys(qrMap).length !== books.length) return;
-    const timer = setTimeout(async () => {
+    const timer = setTimeout(() => {
       window.print();
-      try {
-        await markLabelsPrinted(books.map((b) => b.id));
-        onPrinted?.();
-      } catch {
-        // still printed physically
-      }
+      onPrintDialogOpened?.();
     }, 400);
     return () => clearTimeout(timer);
-  }, [books, qrMap, onPrinted]);
+  }, [books, qrMap, onPrintDialogOpened]);
 
   return (
     <>

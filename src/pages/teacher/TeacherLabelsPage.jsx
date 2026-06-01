@@ -49,8 +49,8 @@ export default function TeacherLabelsPage() {
           <a href={AVERY_5658.productUrl} target="_blank" rel="noopener noreferrer">
             Avery 5658
           </a>{' '}
-          sheets (1″ × 1″, 48 per page). Use the on-screen match list when printing to pair
-          stickers with books.
+          sheets (1″ × 1″, 48 per page). After applying stickers, scan each one to clear the Needs
+          label badge.
         </Text>
         <Stack gap="var(--space-2)" style={{ flexDirection: 'row' }}>
           <Button
