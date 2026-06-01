@@ -8,6 +8,7 @@ import { getBookByBarcode, markLabelsPrinted } from '../../lib/books.js';
 export function LabelVerifyPanel({ initialBooks, onDone }) {
   const [pending, setPending] = useState(initialBooks);
   const [scanError, setScanError] = useState('');
+  const [scanSuccess, setScanSuccess] = useState(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -19,8 +20,12 @@ export function LabelVerifyPanel({ initialBooks, onDone }) {
     setBusy(true);
     try {
       await markLabelsPrinted([book.id]);
+      const wasInList = pending.some((b) => b.id === book.id);
+      const remaining = wasInList ? pending.length - 1 : pending.length;
       setPending((prev) => prev.filter((b) => b.id !== book.id));
+      setScanSuccess({ book, remaining });
     } catch (err) {
+      setScanSuccess(null);
       setScanError(err.message ?? 'Could not save label status.');
     } finally {
       setBusy(false);
@@ -35,15 +40,18 @@ export function LabelVerifyPanel({ initialBooks, onDone }) {
       try {
         const fromDb = await getBookByBarcode(barcode);
         if (!fromDb) {
+          setScanSuccess(null);
           setScanError(`No book found for ${barcode}.`);
           return;
         }
         if (fromDb.label_printed_at) {
+          setScanSuccess(null);
           setScanError(`${barcode} is already validated.`);
           return;
         }
         book = fromDb;
       } catch (err) {
+        setScanSuccess(null);
         setScanError(err.message ?? 'Lookup failed.');
         return;
       }
@@ -63,6 +71,7 @@ export function LabelVerifyPanel({ initialBooks, onDone }) {
     }
     setBusy(true);
     setScanError('');
+    setScanSuccess(null);
     try {
       await markLabelsPrinted(pending.map((b) => b.id));
       setPending([]);
@@ -87,6 +96,36 @@ export function LabelVerifyPanel({ initialBooks, onDone }) {
       </Stack>
 
       <BarcodeScanner scannerId="cl-label-verify" mode="qr" active={!busy} onScan={handleScan} />
+
+      {scanSuccess ? (
+        <Stack
+          gap="var(--space-1)"
+          style={{
+            padding: 'var(--space-3) var(--space-4)',
+            borderRadius: 'var(--radius-sm)',
+            border: '2px solid var(--color-available)',
+            background: 'color-mix(in srgb, var(--color-available) 14%, var(--color-card))',
+          }}
+          role="status"
+          aria-live="polite"
+        >
+          <Text variant="emphasis" style={{ color: 'var(--color-primary)' }}>
+            Validated
+          </Text>
+          <Text variant="body">
+            {scanSuccess.book.title}
+            {scanSuccess.book.author ? ` — ${scanSuccess.book.author}` : ''}
+          </Text>
+          <Text variant="label" style={{ fontFamily: 'var(--font-mono)' }}>
+            {scanSuccess.book.barcode}
+          </Text>
+          <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
+            {scanSuccess.remaining > 0
+              ? `${scanSuccess.remaining} book${scanSuccess.remaining === 1 ? '' : 's'} left to validate.`
+              : 'All labels validated — you\'re done!'}
+          </Text>
+        </Stack>
+      ) : null}
 
       {pending.length > 0 ? (
         <Stack gap="var(--space-2)">
