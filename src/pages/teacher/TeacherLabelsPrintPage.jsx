@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { LabelPrintSheet } from '../../components/labels/LabelPrintSheet.jsx';
-import { LabelVerifyPanel } from '../../components/labels/LabelVerifyPanel.jsx';
 import { Button } from '../../components/ui/Button.jsx';
 import { Spinner } from '../../components/ui/Spinner.jsx';
 import { Stack } from '../../components/ui/Stack.jsx';
@@ -25,7 +24,7 @@ export default function TeacherLabelsPrintPage() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [showVerify, setShowVerify] = useState(false);
+  const [printed, setPrinted] = useState(false);
 
   useEffect(() => {
     if (!ids.length) {
@@ -81,31 +80,39 @@ export default function TeacherLabelsPrintPage() {
           <Text variant="title">
             Print {books.length} label{books.length === 1 ? '' : 's'}
           </Text>
-          <Text variant="body" style={{ color: 'var(--color-text-muted)' }}>
-            {showVerify ? (
-              'Apply stickers using the match list, then scan each one below to clear the Needs label badge.'
-            ) : (
-              <>
+          {printed ? (
+            <>
+              <Text variant="body" style={{ color: 'var(--color-text-muted)' }}>
+                Sent to printer. Apply stickers using the match list, then validate labels when
+                you&apos;re ready — no need to scan right now.
+              </Text>
+              <Button variant="primary" fullWidth onClick={() => navigate('/teacher/labels')}>
+                Back to print labels
+              </Button>
+              <Button variant="secondary" fullWidth onClick={() => navigate('/teacher/labels/verify')}>
+                Go to validate labels
+              </Button>
+            </>
+          ) : (
+            <>
+              <Text variant="body" style={{ color: 'var(--color-text-muted)' }}>
                 Your browser print dialog will open automatically. Load{' '}
                 <a href={AVERY_5658.productUrl} target="_blank" rel="noopener noreferrer">
                   Avery 5658
                 </a>{' '}
-                blank sheets (1″ × 1″). After printing, you&apos;ll confirm each sticker by scanning
-                it.
-              </>
-            )}
-          </Text>
-          {!showVerify ? (
-            <Button variant="secondary" onClick={() => navigate('/teacher/labels')}>
-              Cancel
-            </Button>
-          ) : null}
+                blank sheets (1″ × 1″). Validate stickers later from{' '}
+                <strong>Validate Labels</strong> on the teacher dashboard.
+              </Text>
+              <Button variant="secondary" onClick={() => navigate('/teacher/labels')}>
+                Cancel
+              </Button>
+            </>
+          )}
         </Stack>
       </div>
-      {showVerify ? (
-        <LabelVerifyPanel books={books} onDone={() => navigate('/teacher/labels')} />
+      {!printed ? (
+        <LabelPrintSheet books={books} onPrintDialogOpened={() => setPrinted(true)} />
       ) : null}
-      <LabelPrintSheet books={books} onPrintDialogOpened={() => setShowVerify(true)} />
     </>
   );
 }

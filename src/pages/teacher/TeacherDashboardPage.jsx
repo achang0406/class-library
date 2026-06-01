@@ -16,6 +16,7 @@ const LINKS = [
   { to: '/teacher/add', label: 'Add Book' },
   { to: '/teacher/add?mode=rapid', label: 'Rapid Add' },
   { to: '/teacher/labels', label: 'Print Labels' },
+  { to: '/teacher/labels/verify', label: 'Validate Labels' },
   { to: '/teacher/people', label: 'Manage People' },
   { to: '/teacher/overdue', label: 'Overdue Books' },
   { to: '/teacher/import', label: 'Import CSV' },

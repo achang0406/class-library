@@ -218,9 +218,9 @@ For books added over several days without labels:
 2. Filter: **“Needs label”** (books where `label_printed_at IS NULL`)
 3. Select all (or shift-select a range)
 4. Print one combined sheet, apply stickers using the on-screen match list.
-5. **Confirm each sticker:** scan the LIB- QR after applying — clears the "Needs label" badge for that copy only.
+5. **Validate separately** at `/teacher/labels/verify` — scan each LIB- QR when ready (any order; decoupled from printing).
 
-`label_printed_at` is set when a sticker is **scan-confirmed** (not when the print dialog opens). Teachers can **Mark as needs label** on a book detail page if a sticker was lost or misapplied.
+`label_printed_at` is set when a sticker is **scan-validated** on the Validate Labels page (not when printing). Teachers can **Mark as needs label** on a book detail page if a sticker was lost or misapplied.
 
 Add optional DB field: `label_printed_at timestamptz NULL` — tracking only; does not affect barcode.
 

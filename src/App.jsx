@@ -10,6 +10,7 @@ import TeacherDashboardPage from './pages/teacher/TeacherDashboardPage.jsx';
 import TeacherAddPage from './pages/teacher/TeacherAddPage.jsx';
 import TeacherLabelsPage from './pages/teacher/TeacherLabelsPage.jsx';
 import TeacherLabelsPrintPage from './pages/teacher/TeacherLabelsPrintPage.jsx';
+import TeacherLabelsVerifyPage from './pages/teacher/TeacherLabelsVerifyPage.jsx';
 import TeacherPeoplePage from './pages/teacher/TeacherPeoplePage.jsx';
 import TeacherOverduePage from './pages/teacher/TeacherOverduePage.jsx';
 import TeacherImportPage from './pages/teacher/TeacherImportPage.jsx';
@@ -43,6 +44,12 @@ export default function App() {
             <Route index element={<TeacherAddPage />} />
           </Route>
           <Route path="/teacher/labels/print" element={<TeacherLabelsPrintPage />} />
+          <Route
+            path="/teacher/labels/verify"
+            element={<AppShell title="Validate Labels" backTo="/teacher/dashboard" />}
+          >
+            <Route index element={<TeacherLabelsVerifyPage />} />
+          </Route>
           <Route
             path="/teacher/labels"
             element={<AppShell title="Print Labels" backTo="/teacher/dashboard" />}

@@ -49,9 +49,12 @@ export default function TeacherLabelsPage() {
           <a href={AVERY_5658.productUrl} target="_blank" rel="noopener noreferrer">
             Avery 5658
           </a>{' '}
-          sheets (1″ × 1″, 48 per page). After applying stickers, scan each one to clear the Needs
-          label badge.
+          sheets (1″ × 1″, 48 per page). Print and apply stickers first — validate LIB- codes
+          separately when ready.
         </Text>
+        <Button variant="accent" fullWidth onClick={() => navigate('/teacher/labels/verify')}>
+          Validate labels
+        </Button>
         <Stack gap="var(--space-2)" style={{ flexDirection: 'row' }}>
           <Button
             variant={filter === 'needs' ? 'primary' : 'secondary'}
