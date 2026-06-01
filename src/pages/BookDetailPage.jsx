@@ -10,6 +10,7 @@ import { SupabaseBanner } from '../components/layout/SupabaseBanner.jsx';
 import { PageContainer } from '../components/layout/PageContainer.jsx';
 import { getBookById, deleteBook, markLabelsNeeded } from '../lib/books.js';
 import { getActiveCheckoutForBook, enrichCheckout } from '../lib/checkouts.js';
+import { formatLexile } from '../lib/lexile.js';
 import { getOverdueDays } from '../lib/settings.js';
 import { isTeacherLoggedIn } from '../lib/teacherSession.js';
 
@@ -134,9 +135,18 @@ export default function BookDetailPage() {
                 {book.status === 'available' ? 'Available' : 'Checked out'}
               </Badge>
               {book.genre ? <Badge variant="neutral">{book.genre}</Badge> : null}
+              {book.reading_level ? <Badge variant="neutral">{book.reading_level}</Badge> : null}
               {!book.label_printed_at ? <Badge variant="needs-label">Needs label</Badge> : null}
             </Stack>
             {book.publish_year ? <Text variant="label">Published {book.publish_year}</Text> : null}
+            {book.lexile != null ? (
+              <Text variant="label">
+                Lexile {formatLexile(book.lexile)}
+                {book.reading_level ? ` · ${book.reading_level}` : ''}
+              </Text>
+            ) : book.reading_level ? (
+              <Text variant="label">{book.reading_level}</Text>
+            ) : null}
             {book.isbn ? <Text variant="label">ISBN {book.isbn}</Text> : null}
             <Text variant="label" style={{ fontFamily: 'var(--font-mono)' }}>
               {book.barcode}

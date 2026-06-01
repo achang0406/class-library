@@ -13,6 +13,7 @@ import { SupabaseBanner } from '../../components/layout/SupabaseBanner.jsx';
 import { PageContainer } from '../../components/layout/PageContainer.jsx';
 import { GENRES } from '../../constants/genres.js';
 import { createBookCopies, findExistingCopies } from '../../lib/books.js';
+import { formatLexile } from '../../lib/lexile.js';
 import { lookupOpenLibraryByIsbn, normalizeIsbn } from '../../lib/openLibrary.js';
 
 const emptyForm = {
@@ -23,6 +24,8 @@ const emptyForm = {
   isbn: null,
   publish_year: null,
   open_library_key: null,
+  lexile: null,
+  reading_level: null,
 };
 
 function buildPayload(form) {
@@ -34,6 +37,8 @@ function buildPayload(form) {
     isbn: form.isbn,
     publish_year: form.publish_year,
     open_library_key: form.open_library_key,
+    lexile: form.lexile,
+    reading_level: form.reading_level,
   };
 }
 
@@ -67,6 +72,8 @@ export default function TeacherAddPage() {
       isbn: item.isbn,
       publish_year: item.publishYear,
       open_library_key: item.openLibraryKey,
+      lexile: item.lexile ?? null,
+      reading_level: item.readingLevel ?? null,
     });
     setError('');
     setDuplicate(null);
@@ -188,9 +195,17 @@ export default function TeacherAddPage() {
                 style={{ flexDirection: 'row', alignItems: 'flex-start' }}
               >
                 <BookCover src={form.cover_url} alt="" width={80} />
-                <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
-                  Selected — fields auto-filled. Edit if needed.
-                </Text>
+                <Stack gap="var(--space-1)">
+                  <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
+                    Selected — fields auto-filled. Edit if needed.
+                  </Text>
+                  {form.lexile != null ? (
+                    <Text variant="label">
+                      {formatLexile(form.lexile)}
+                      {form.reading_level ? ` · ${form.reading_level}` : ''}
+                    </Text>
+                  ) : null}
+                </Stack>
               </Stack>
             ) : null}
             <Input

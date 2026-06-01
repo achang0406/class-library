@@ -1,9 +1,10 @@
 import { mapSubjectsToGenre } from './genreMap.js';
+import { normalizeLexile, readingLevelFromLexile } from './lexile.js';
 import { normalizeIsbn } from './isbn.js';
 
 export { normalizeIsbn } from './isbn.js';
 
-const FIELDS = 'key,title,author_name,cover_i,first_publish_year,isbn,subject';
+const FIELDS = 'key,title,author_name,cover_i,first_publish_year,isbn,subject,lexile';
 const CACHE = new Map();
 
 function coverUrl(coverId) {
@@ -12,6 +13,7 @@ function coverUrl(coverId) {
 
 export function mapOpenLibraryDoc(doc) {
   const authors = doc.author_name ?? [];
+  const lexile = normalizeLexile(doc.lexile);
   return {
     openLibraryKey: doc.key ?? null,
     title: doc.title ?? '',
@@ -21,6 +23,8 @@ export function mapOpenLibraryDoc(doc) {
     isbn: doc.isbn?.[0] ?? null,
     genre: mapSubjectsToGenre(doc.subject ?? []),
     subjects: doc.subject ?? [],
+    lexile,
+    readingLevel: readingLevelFromLexile(lexile),
   };
 }
 

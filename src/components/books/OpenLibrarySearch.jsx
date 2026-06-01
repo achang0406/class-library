@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { searchOpenLibrary } from '../../lib/openLibrary.js';
+import { formatLexile } from '../../lib/lexile.js';
 import { BookCover } from '../ui/BookCover.jsx';
 import { Input } from '../ui/Input.jsx';
 import { Spinner } from '../ui/Spinner.jsx';
@@ -86,6 +87,8 @@ export function OpenLibrarySearch({ onSelect, autoFocus }) {
                 <Text variant="label">
                   {item.author}
                   {item.publishYear ? ` · ${item.publishYear}` : ''}
+                  {item.lexile != null ? ` · ${formatLexile(item.lexile)}` : ''}
+                  {item.readingLevel ? ` · ${item.readingLevel}` : ''}
                 </Text>
               </Stack>
             </button>
