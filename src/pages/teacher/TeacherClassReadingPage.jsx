@@ -1,25 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Badge } from '../../components/ui/Badge.jsx';
-import { Card } from '../../components/ui/Card.jsx';
 import { Inline } from '../../components/ui/Inline.jsx';
 import { Stack } from '../../components/ui/Stack.jsx';
+import { StatCard } from '../../components/ui/StatCard.jsx';
 import { Text } from '../../components/ui/Text.jsx';
 import { SupabaseBanner } from '../../components/layout/SupabaseBanner.jsx';
 import { PageContainer } from '../../components/layout/PageContainer.jsx';
 import { getClassReadingReport } from '../../lib/classReadingStats.js';
 import { isSupabaseConfigured } from '../../lib/supabase.js';
-
-function StatCard({ label, value }) {
-  return (
-    <Card style={{ flex: '1 1 100px', minWidth: 100 }}>
-      <Text variant="display" style={{ fontSize: 'var(--font-title)' }}>
-        {value}
-      </Text>
-      <Text variant="label">{label}</Text>
-    </Card>
-  );
-}
 
 function formatLastCheckout(daysSinceLast, lastCheckoutAt) {
   if (lastCheckoutAt == null) return 'Never';
@@ -83,6 +72,20 @@ export default function TeacherClassReadingPage() {
           <StatCard label="Active readers" value={summary.activeReaders} />
           <StatCard label="Books read" value={summary.totalBooksRead} />
           <StatCard label="Currently out" value={summary.currentlyOut} />
+          <StatCard
+            label="Avg Lexile read"
+            value={summary.avgLexileLabel ?? '—'}
+            detail={
+              summary.avgLexileLabel
+                ? [
+                    summary.avgLexileGrade,
+                    `${summary.lexileBooksRead} book${summary.lexileBooksRead === 1 ? '' : 's'}`,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')
+                : undefined
+            }
+          />
         </Inline>
 
         <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
@@ -134,6 +137,9 @@ export default function TeacherClassReadingPage() {
                     <Badge variant="neutral">{row.stats.booksCompleted} read</Badge>
                     {row.stats.currentLoans > 0 ? (
                       <Badge variant="checked-out">{row.stats.currentLoans} out</Badge>
+                    ) : null}
+                    {row.stats.avgLexileLabel ? (
+                      <Badge variant="neutral">{row.stats.avgLexileLabel} avg</Badge>
                     ) : null}
                     {row.topGenre ? <Badge variant="neutral">{row.topGenre}</Badge> : null}
                     {row.inactive ? (

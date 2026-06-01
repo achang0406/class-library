@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button.jsx';
-import { Card } from '../../components/ui/Card.jsx';
 import { Inline } from '../../components/ui/Inline.jsx';
 import { Stack } from '../../components/ui/Stack.jsx';
+import { StatCard } from '../../components/ui/StatCard.jsx';
 import { Text } from '../../components/ui/Text.jsx';
 import { SupabaseBanner } from '../../components/layout/SupabaseBanner.jsx';
 import { PageContainer } from '../../components/layout/PageContainer.jsx';
@@ -67,12 +67,7 @@ export default function TeacherDashboardPage() {
             { label: 'Out', value: stats.checkedOut },
             { label: 'Overdue', value: stats.overdue },
           ].map(({ label, value }) => (
-            <Card key={label} style={{ flex: '1 1 100px', minWidth: 100 }}>
-              <Text variant="display" style={{ fontSize: 'var(--font-title)' }}>
-                {value}
-              </Text>
-              <Text variant="label">{label}</Text>
-            </Card>
+            <StatCard key={label} label={label} value={value} />
           ))}
         </Inline>
         <Stack gap="var(--space-3)">

@@ -1,5 +1,4 @@
 import { supabase, isSupabaseConfigured } from './supabase.js';
-import { lookupOpenLibraryLexile } from './openLibrary.js';
 
 function requireClient() {
   if (!isSupabaseConfigured || !supabase) {
@@ -108,23 +107,6 @@ export async function updateBook(id, payload) {
     .single();
   if (error) throw error;
   return data;
-}
-
-/** Look up Lexile from Open Library when missing; persist when found. */
-export async function refreshBookLexileIfMissing(book) {
-  if (!book || book.lexile != null) return book;
-  if (!book.isbn && !book.open_library_key) return book;
-
-  const match = await lookupOpenLibraryLexile({
-    isbn: book.isbn,
-    openLibraryKey: book.open_library_key,
-  });
-  if (!match) return book;
-
-  return updateBook(book.id, {
-    lexile: match.lexile,
-    reading_level: match.readingLevel,
-  });
 }
 
 export async function markLabelsPrinted(bookIds) {

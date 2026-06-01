@@ -61,6 +61,25 @@ export function readingLevelFromLexile(lexile) {
   return lexileToGradeLevel(normalizeLexile(lexile) ?? lexile);
 }
 
+/** @param {number[]} scores */
+export function averageLexileFromScores(scores) {
+  const valid = scores.filter((v) => v != null && Number.isFinite(v));
+  if (!valid.length) return null;
+  const avg = Math.round(valid.reduce((sum, n) => sum + n, 0) / valid.length);
+  return {
+    avgLexile: avg,
+    avgLexileLabel: formatLexile(avg),
+    avgLexileGrade: lexileToGradeLevel(avg),
+    count: valid.length,
+  };
+}
+
+/** @param {Array<{ returned_at?: string | null, books?: { lexile?: number | null } | null }>} checkouts */
+export function averageLexileFromCheckouts(checkouts, { completedOnly = true } = {}) {
+  const rows = completedOnly ? checkouts.filter((c) => c.returned_at) : checkouts;
+  return averageLexileFromScores(rows.map((c) => c.books?.lexile));
+}
+
 /** @param {{ lexile?: number | null, reading_level?: string | null }} book */
 export function resolveBookReadingDisplay(book) {
   const lexile = book?.lexile ?? null;

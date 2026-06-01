@@ -1,6 +1,7 @@
 import { listBorrowers } from './borrowers.js';
 import { listBooks } from './books.js';
 import { computeStudentStats, getBookCheckoutCounts } from './checkouts.js';
+import { averageLexileFromCheckouts } from './lexile.js';
 import { daysSince } from './settings.js';
 import { supabase, isSupabaseConfigured } from './supabase.js';
 
@@ -89,6 +90,7 @@ export async function getClassReadingReport({ inactiveDays = INACTIVE_DAYS } = {
   const activeReaders = studentRows.filter((row) => !row.inactive).length;
   const totalBooksRead = studentRows.reduce((sum, row) => sum + row.stats.booksCompleted, 0);
   const currentlyOut = studentRows.reduce((sum, row) => sum + row.stats.currentLoans, 0);
+  const classLexile = averageLexileFromCheckouts(completedCheckouts);
 
   const popularBooks = await buildPopularBooks();
   const genreBreakdown = buildGenreBreakdown(completedCheckouts);
@@ -102,6 +104,9 @@ export async function getClassReadingReport({ inactiveDays = INACTIVE_DAYS } = {
       totalBooksRead,
       currentlyOut,
       inactiveDays,
+      avgLexileLabel: classLexile?.avgLexileLabel ?? null,
+      avgLexileGrade: classLexile?.avgLexileGrade ?? null,
+      lexileBooksRead: classLexile?.count ?? 0,
     },
     students: studentRows,
     inactiveStudents,

@@ -3,14 +3,15 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Badge } from '../components/ui/Badge.jsx';
 import { BookCover } from '../components/ui/BookCover.jsx';
 import { Button } from '../components/ui/Button.jsx';
+import { Input } from '../components/ui/Input.jsx';
 import { Spinner } from '../components/ui/Spinner.jsx';
 import { Stack } from '../components/ui/Stack.jsx';
 import { Text } from '../components/ui/Text.jsx';
 import { SupabaseBanner } from '../components/layout/SupabaseBanner.jsx';
 import { PageContainer } from '../components/layout/PageContainer.jsx';
-import { getBookById, deleteBook, markLabelsNeeded, refreshBookLexileIfMissing } from '../lib/books.js';
+import { getBookById, deleteBook, markLabelsNeeded, updateBook } from '../lib/books.js';
 import { getActiveCheckoutForBook, enrichCheckout } from '../lib/checkouts.js';
-import { resolveBookReadingDisplay } from '../lib/lexile.js';
+import { resolveBookReadingDisplay, normalizeLexile, formatLexile, readingLevelFromLexile } from '../lib/lexile.js';
 import { getOverdueDays } from '../lib/settings.js';
 import { useTeacherSession } from '../components/layout/TeacherSessionProvider.jsx';
 
@@ -23,6 +24,8 @@ export default function BookDetailPage() {
   const [error, setError] = useState('');
   const [removing, setRemoving] = useState(false);
   const [labelBusy, setLabelBusy] = useState(false);
+  const [lexileInput, setLexileInput] = useState('');
+  const [lexileBusy, setLexileBusy] = useState(false);
   const { isTeacher } = useTeacherSession();
 
   useEffect(() => {
@@ -39,13 +42,7 @@ export default function BookDetailPage() {
           return;
         }
         setBook(b);
-        if (isTeacher && b.lexile == null && (b.isbn || b.open_library_key)) {
-          refreshBookLexileIfMissing(b)
-            .then((updated) => {
-              if (!cancelled && updated.id === b.id) setBook(updated);
-            })
-            .catch(() => {});
-        }
+        setLexileInput(b.lexile != null ? formatLexile(b.lexile) ?? '' : '');
         if (b.status === 'checked_out') {
           const c = await getActiveCheckoutForBook(b.id);
           if (!cancelled) setCheckout(c ? enrichCheckout(c) : null);
@@ -62,7 +59,7 @@ export default function BookDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [id, isTeacher]);
+  }, [id]);
 
   function printLabel() {
     navigate(`/teacher/labels/print?ids=${book.id}`);
@@ -78,6 +75,33 @@ export default function BookDetailPage() {
       setError(err.message ?? 'Failed to update label status');
     } finally {
       setLabelBusy(false);
+    }
+  }
+
+  async function handleSaveLexile() {
+    const trimmed = lexileInput.trim();
+    const parsed = trimmed ? normalizeLexile(trimmed) : null;
+
+    if (trimmed && parsed == null) {
+      setError('Enter a Lexile like 720L or BR100L');
+      return;
+    }
+
+    if (parsed === book.lexile) return;
+
+    setLexileBusy(true);
+    setError('');
+    try {
+      const updated = await updateBook(book.id, {
+        lexile: parsed,
+        reading_level: parsed != null ? readingLevelFromLexile(parsed) : null,
+      });
+      setBook(updated);
+      setLexileInput(parsed != null ? formatLexile(parsed) ?? '' : '');
+    } catch (err) {
+      setError(err.message ?? 'Failed to save Lexile');
+    } finally {
+      setLexileBusy(false);
     }
   }
 
@@ -154,8 +178,18 @@ export default function BookDetailPage() {
                 Lexile {reading.lexileLabel}
                 {reading.readingLevel ? ` · ${reading.readingLevel}` : ''}
               </Text>
-            ) : isTeacher && reading?.readingLevel ? (
-              <Text variant="label">{reading.readingLevel}</Text>
+            ) : isTeacher ? (
+              <Stack gap="var(--space-2)">
+                <Input
+                  label="Lexile measure"
+                  placeholder="e.g. 720L or BR100L"
+                  value={lexileInput}
+                  onChange={(e) => setLexileInput(e.target.value)}
+                />
+                <Button variant="secondary" loading={lexileBusy} onClick={handleSaveLexile}>
+                  Save Lexile
+                </Button>
+              </Stack>
             ) : null}
             {book.isbn ? <Text variant="label">ISBN {book.isbn}</Text> : null}
             <Text variant="label" style={{ fontFamily: 'var(--font-mono)' }}>

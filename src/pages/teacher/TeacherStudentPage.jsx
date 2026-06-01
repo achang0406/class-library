@@ -7,6 +7,7 @@ import { BookCover } from '../../components/ui/BookCover.jsx';
 import { Card } from '../../components/ui/Card.jsx';
 import { Inline } from '../../components/ui/Inline.jsx';
 import { Stack } from '../../components/ui/Stack.jsx';
+import { StatCard } from '../../components/ui/StatCard.jsx';
 import { Text } from '../../components/ui/Text.jsx';
 import { SupabaseBanner } from '../../components/layout/SupabaseBanner.jsx';
 import { PageContainer } from '../../components/layout/PageContainer.jsx';
@@ -14,6 +15,7 @@ import { getBorrowerById } from '../../lib/borrowers.js';
 import { checkoutDuration } from '../../lib/checkouts.js';
 import { getExternalRecommendationsForStudent } from '../../lib/externalRecommendations.js';
 import { getStudentRecommendationContext } from '../../lib/recommendations.js';
+import { resolveBookReadingDisplay } from '../../lib/lexile.js';
 import { daysSince } from '../../lib/settings.js';
 import { isSupabaseConfigured } from '../../lib/supabase.js';
 
@@ -24,17 +26,6 @@ function formatDate(iso) {
     day: 'numeric',
     year: 'numeric',
   });
-}
-
-function StatCard({ label, value }) {
-  return (
-    <Card style={{ flex: '1 1 100px', minWidth: 100 }}>
-      <Text variant="display" style={{ fontSize: 'var(--font-title)' }}>
-        {value}
-      </Text>
-      <Text variant="label">{label}</Text>
-    </Card>
-  );
 }
 
 function ExternalBookCard({ book }) {
@@ -137,6 +128,8 @@ export default function TeacherStudentPage() {
     );
   }
 
+  const recentReads = history.filter((checkout) => checkout.returned_at).slice(0, 5);
+
   return (
     <PageContainer>
       <Stack gap="var(--space-5)" style={{ paddingTop: 'var(--space-4)' }}>
@@ -160,6 +153,20 @@ export default function TeacherStudentPage() {
             <StatCard label="Currently out" value={stats.currentLoans} />
             <StatCard label="Avg days out" value={stats.avgDaysOut || '—'} />
             <StatCard label="Re-reads" value={stats.repeatCheckouts} />
+            <StatCard
+              label="Avg Lexile read"
+              value={stats.avgLexileLabel ?? '—'}
+              detail={
+                stats.avgLexileLabel
+                  ? [
+                      stats.avgLexileGrade,
+                      `${stats.lexileBooksRead} book${stats.lexileBooksRead === 1 ? '' : 's'}`,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')
+                  : undefined
+              }
+            />
           </Inline>
         ) : null}
 
@@ -234,6 +241,50 @@ export default function TeacherStudentPage() {
                 <ExternalBookCard key={book.openLibraryKey ?? book.title} book={book} />
               ))}
             </div>
+          </Stack>
+        ) : null}
+
+        {recentReads.length > 0 ? (
+          <Stack gap="var(--space-3)">
+            <Text as="h2" variant="title">
+              Recently read
+            </Text>
+            <Stack gap="var(--space-2)">
+              {recentReads.map((checkout) => {
+                const book = checkout.books;
+                const reading = resolveBookReadingDisplay(book ?? {});
+                const days = checkoutDuration(checkout);
+
+                return (
+                  <Stack
+                    key={checkout.id}
+                    gap="var(--space-2)"
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      padding: 'var(--space-3)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 'var(--radius-sm)',
+                      background: 'var(--color-card)',
+                    }}
+                  >
+                    <BookCover src={book?.cover_url} alt="" width={48} />
+                    <Stack gap="var(--space-1)" style={{ flex: 1 }}>
+                      <Text variant="emphasis">{book?.title ?? 'Unknown book'}</Text>
+                      {book?.author ? (
+                        <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
+                          {book.author}
+                        </Text>
+                      ) : null}
+                      <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
+                        Returned {formatDate(checkout.returned_at)} · {days} day{days === 1 ? '' : 's'}
+                        {reading.lexileLabel ? ` · ${reading.lexileLabel}` : ''}
+                      </Text>
+                    </Stack>
+                  </Stack>
+                );
+              })}
+            </Stack>
           </Stack>
         ) : null}
 

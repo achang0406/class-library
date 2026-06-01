@@ -1,5 +1,6 @@
 import { supabase, isSupabaseConfigured } from './supabase.js';
 import { getOverdueDays, daysSince } from './settings.js';
+import { averageLexileFromCheckouts } from './lexile.js';
 
 function requireClient() {
   if (!isSupabaseConfigured || !supabase) {
@@ -54,6 +55,8 @@ export function computeStudentStats(checkouts) {
     ? Math.round((durations.reduce((a, b) => a + b, 0) / durations.length) * 10) / 10
     : 0;
 
+  const lexileStats = averageLexileFromCheckouts(checkouts);
+
   return {
     totalCheckouts: checkouts.length,
     booksCompleted: completed.length,
@@ -64,6 +67,10 @@ export function computeStudentStats(checkouts) {
     topAuthors: sortByCount(authorCounts, 3),
     borrowedBookIds: new Set(checkouts.map((c) => c.book_id)),
     lastCheckoutAt: checkouts[0]?.checked_out_at ?? null,
+    avgLexile: lexileStats?.avgLexile ?? null,
+    avgLexileLabel: lexileStats?.avgLexileLabel ?? null,
+    avgLexileGrade: lexileStats?.avgLexileGrade ?? null,
+    lexileBooksRead: lexileStats?.count ?? 0,
   };
 }
 
