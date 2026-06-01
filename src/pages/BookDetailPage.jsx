@@ -39,7 +39,7 @@ export default function BookDetailPage() {
           return;
         }
         setBook(b);
-        if (b.lexile == null && (b.isbn || b.open_library_key)) {
+        if (isTeacher && b.lexile == null && (b.isbn || b.open_library_key)) {
           refreshBookLexileIfMissing(b)
             .then((updated) => {
               if (!cancelled && updated.id === b.id) setBook(updated);
@@ -62,7 +62,7 @@ export default function BookDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, isTeacher]);
 
   function printLabel() {
     navigate(`/teacher/labels/print?ids=${book.id}`);
@@ -121,7 +121,7 @@ export default function BookDetailPage() {
 
   const overdueDays = getOverdueDays();
   const isOverdue = checkout && checkout.daysOut > overdueDays;
-  const reading = resolveBookReadingDisplay(book);
+  const reading = isTeacher ? resolveBookReadingDisplay(book) : null;
 
   return (
     <PageContainer>
@@ -143,16 +143,18 @@ export default function BookDetailPage() {
                 {book.status === 'available' ? 'Available' : 'Checked out'}
               </Badge>
               {book.genre ? <Badge variant="neutral">{book.genre}</Badge> : null}
-              {reading.readingLevel ? <Badge variant="neutral">{reading.readingLevel}</Badge> : null}
+              {isTeacher && reading?.readingLevel ? (
+                <Badge variant="neutral">{reading.readingLevel}</Badge>
+              ) : null}
               {!book.label_printed_at ? <Badge variant="needs-label">Needs label</Badge> : null}
             </Stack>
             {book.publish_year ? <Text variant="label">Published {book.publish_year}</Text> : null}
-            {reading.lexileLabel ? (
+            {isTeacher && reading?.lexileLabel ? (
               <Text variant="label">
                 Lexile {reading.lexileLabel}
                 {reading.readingLevel ? ` · ${reading.readingLevel}` : ''}
               </Text>
-            ) : reading.readingLevel ? (
+            ) : isTeacher && reading?.readingLevel ? (
               <Text variant="label">{reading.readingLevel}</Text>
             ) : null}
             {book.isbn ? <Text variant="label">ISBN {book.isbn}</Text> : null}

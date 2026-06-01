@@ -4,10 +4,12 @@ import { BookCover } from '../ui/BookCover.jsx';
 import { Card } from '../ui/Card.jsx';
 import { Text } from '../ui/Text.jsx';
 import { resolveBookReadingDisplay } from '../../lib/lexile.js';
+import { isTeacherLoggedIn } from '../../lib/teacherSession.js';
 
 export function BookCard({ book }) {
   const badgeVariant = book.status === 'available' ? 'available' : 'checked-out';
-  const reading = resolveBookReadingDisplay(book);
+  const isTeacher = isTeacherLoggedIn();
+  const reading = isTeacher ? resolveBookReadingDisplay(book) : null;
 
   return (
     <Link to={`/books/${book.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -34,7 +36,7 @@ export function BookCard({ book }) {
           {book.title}
         </Text>
         <Text variant="label">{book.author ?? 'Unknown author'}</Text>
-        {reading.lexileLabel || reading.readingLevel ? (
+        {isTeacher && (reading?.lexileLabel || reading?.readingLevel) ? (
           <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
             {reading.lexileLabel ?? ''}
             {reading.lexileLabel && reading.readingLevel ? ' · ' : ''}
