@@ -86,6 +86,9 @@ export default function TeacherLabelsPrintPage() {
                 Sent to printer. Apply stickers using the match list, then validate labels when
                 you&apos;re ready — no need to scan right now.
               </Text>
+              <Button variant="secondary" fullWidth onClick={() => window.print()}>
+                Print again
+              </Button>
               <Button variant="primary" fullWidth onClick={() => navigate('/teacher/labels')}>
                 Back to print labels
               </Button>
@@ -110,9 +113,7 @@ export default function TeacherLabelsPrintPage() {
           )}
         </Stack>
       </div>
-      {!printed ? (
-        <LabelPrintSheet books={books} onPrintDialogOpened={() => setPrinted(true)} />
-      ) : null}
+      <LabelPrintSheet books={books} onPrintComplete={() => setPrinted(true)} />
     </>
   );
 }

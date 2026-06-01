@@ -19,15 +19,45 @@
         margin: 0 0 0.5rem;
       }
       p.meta {
-        margin: 0 0 1.5rem;
+        margin: 0 0 1rem;
         color: #52796f;
         font-size: 0.9rem;
-        max-width: 40rem;
+        max-width: 42rem;
         line-height: 1.45;
       }
       p.meta a {
         color: #1b4332;
         font-weight: 600;
+      }
+      .no-print-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+      .no-print-actions button {
+        font: inherit;
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        border: 1px solid #1b4332;
+        background: #1b4332;
+        color: white;
+        cursor: pointer;
+      }
+      .no-print-actions button:disabled {
+        opacity: 0.5;
+        cursor: wait;
+      }
+      .no-print-actions button.secondary {
+        background: white;
+        color: #1b4332;
+      }
+      #status {
+        margin: 0;
+        font-size: 0.85rem;
+        color: #52796f;
       }
       .label-print-pages {
         display: flex;
@@ -40,6 +70,7 @@
         height: 11in;
         background: white;
         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+        overflow: visible;
       }
       .label-print-area {
         width: 100%;
@@ -50,6 +81,16 @@
         column-gap: 0.25in;
         grid-auto-rows: 1in;
         row-gap: 0.25in;
+        overflow: visible;
+      }
+      .label-cell {
+        position: relative;
+        width: 1in;
+        height: 1in;
+        outline: 1px dashed #ccc;
+      }
+      .label-cell.row-8 .label-sticker {
+        outline: 1px dashed #c44;
       }
       .label-sticker {
         display: flex;
@@ -60,7 +101,6 @@
         overflow: hidden;
         width: 1in;
         height: 1in;
-        outline: 1px dashed #ccc;
       }
       .label-qr {
         width: 0.8in;
@@ -80,6 +120,25 @@
         overflow: hidden;
         white-space: nowrap;
       }
+      .label-title {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 100%;
+        height: 0.25in;
+        margin: 0;
+        padding: 0 1px;
+        box-sizing: border-box;
+        font-size: 5.5pt;
+        line-height: 1.05;
+        font-weight: 600;
+        text-align: center;
+        color: #222;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+      }
       @media print {
         @page {
           size: letter;
@@ -90,29 +149,38 @@
           padding: 0;
         }
         .no-print {
-          display: none;
+          display: none !important;
         }
         .label-print-page {
           box-shadow: none;
           page-break-after: always;
         }
-        .label-sticker {
-          outline: none;
+        .label-sticker,
+        .label-cell {
+          outline: none !important;
         }
       }
     </style>
   </head>
   <body>
     <div class="no-print">
-      <h1>Avery 5658 label preview</h1>
+      <h1>Avery 5658 — full sheet test (48 labels)</h1>
       <p class="meta">
         Stacked layout: <strong>0.8″ QR</strong> with <strong>LIB- id below</strong> on
         <strong>1″ × 1″</strong>
         <a href="https://www.avery.com/products/labels/5658" target="_blank" rel="noopener noreferrer"
           >Avery 5658</a
         >
-        squares (48 per sheet). Print at 100% scale. Sample shows 12 label positions.
+        squares. Titles print in the <strong>0.25″ gap below</strong> each sticker (row 8 titles
+        use the bottom margin). Print at <strong>100% scale</strong>, margins <strong>none</strong>.
+        Last row stickers have a red dashed outline on screen only — check that row-8 titles are
+        fully visible after printing.
       </p>
+      <div class="no-print-actions">
+        <button id="print-btn" type="button" disabled>Print test sheet</button>
+        <button id="reload-btn" type="button" class="secondary" disabled>Regenerate</button>
+        <p id="status">Generating 48 QR codes…</p>
+      </div>
     </div>
     <div class="label-print-pages">
       <div class="label-print-page">
@@ -122,31 +190,89 @@
     <script type="module">
       import QRCode from 'https://esm.sh/qrcode@1.5.4';
 
-      const books = [
-        { title: "Charlotte's Web", author: 'E.B. White', barcode: 'LIB-000001' },
-        { title: "Charlotte's Web", author: 'E.B. White', barcode: 'LIB-000002' },
-        { title: "Charlotte's Web", author: 'E.B. White', barcode: 'LIB-000003' },
-        { title: 'The Very Hungry Caterpillar', author: 'Eric Carle', barcode: 'LIB-000004' },
-        { title: 'Where the Wild Things Are', author: 'Maurice Sendak', barcode: 'LIB-000005' },
-        { title: 'Goodnight Moon', author: 'Margaret Wise Brown', barcode: 'LIB-000006' },
-        { title: 'Diary of a Wimpy Kid', author: 'Jeff Kinney', barcode: 'LIB-000007' },
-        { title: 'Wonder', author: 'R.J. Palacio', barcode: 'LIB-000008' },
-        { title: 'The One and Only Ivan', author: 'Katherine Applegate', barcode: 'LIB-000009' },
-        { title: 'Hatchet', author: 'Gary Paulsen', barcode: 'LIB-000010' },
-        { title: 'Holes', author: 'Louis Sachar', barcode: 'LIB-000011' },
-        { title: 'Matilda', author: 'Roald Dahl', barcode: 'LIB-000012' },
+      const LABELS_PER_SHEET = 48;
+      const COLUMNS = 6;
+
+      /** Mix of short, medium, and long titles — row 8 uses longer names on purpose. */
+      const titlePool = [
+        "Charlotte's Web",
+        'Goodnight Moon',
+        'Wonder',
+        'Hatchet',
+        'Matilda',
+        'Holes',
+        'The Very Hungry Caterpillar',
+        'Where the Wild Things Are',
+        'Diary of a Wimpy Kid',
+        'The One and Only Ivan',
+        'Harry Potter and the Sorcerer\'s Stone',
+        'The Lightning Thief: Percy Jackson and the Olympians Book One',
+        'Brown Bear, Brown Bear, What Do You See?',
+        'The Tale of Despereaux: Being the Story of a Mouse, a Princess, Some Soup, and a Spool of Thread',
+        'Alexander and the Terrible, Horrible, No Good, Very Bad Day',
+        'The Girl Who Drank the Moon',
       ];
 
+      const row8LongTitles = [
+        'The Lightning Thief: Percy Jackson and the Olympians Book One',
+        'The Tale of Despereaux: Being the Story of a Mouse, a Princess, Some Soup, and a Spool of Thread',
+        'Alexander and the Terrible, Horrible, No Good, Very Bad Day',
+        'Brown Bear, Brown Bear, What Do You See?',
+        'Harry Potter and the Sorcerer\'s Stone',
+        'The Very Hungry Caterpillar',
+        'Where the Wild Things Are',
+        'Diary of a Wimpy Kid: Rodrick Rules',
+        'The One and Only Ivan',
+        'Wonder',
+        'Charlotte\'s Web',
+        'Matilda',
+      ];
+
+      const books = Array.from({ length: LABELS_PER_SHEET }, (_, i) => {
+        const row = Math.floor(i / COLUMNS) + 1;
+        const isRow8 = row === 8;
+        const row8Index = i - (8 - 1) * COLUMNS;
+        return {
+          title: isRow8 ? row8LongTitles[row8Index] : titlePool[i % titlePool.length],
+          barcode: `LIB-${String(i + 1).padStart(6, '0')}`,
+          row,
+        };
+      });
+
       const root = document.getElementById('labels');
-      for (const book of books) {
-        const qr = await QRCode.toDataURL(book.barcode, { margin: 1, width: 240 });
-        const el = document.createElement('div');
-        el.className = 'label-sticker';
-        el.innerHTML = `
-          <img class="label-qr" src="${qr}" alt="" />
-          <div class="label-barcode">${book.barcode}</div>`;
-        root.appendChild(el);
+      const status = document.getElementById('status');
+      const printBtn = document.getElementById('print-btn');
+      const reloadBtn = document.getElementById('reload-btn');
+
+      async function renderLabels() {
+        root.replaceChildren();
+        printBtn.disabled = true;
+        reloadBtn.disabled = true;
+        status.textContent = 'Generating 48 QR codes…';
+
+        for (const book of books) {
+          const qr = await QRCode.toDataURL(book.barcode, { margin: 1, width: 240 });
+          const el = document.createElement('div');
+          el.className = `label-cell${book.row === 8 ? ' row-8' : ''}`;
+          el.innerHTML = `
+            <div class="label-sticker">
+              <img class="label-qr" src="${qr}" alt="" />
+              <div class="label-barcode">${book.barcode}</div>
+            </div>
+            <div class="label-title">${book.title}</div>`;
+          root.appendChild(el);
+        }
+
+        status.textContent =
+          'Ready — 48 labels on one sheet. Row 8 (LIB-000037–048) uses longer titles to stress-test clipping.';
+        printBtn.disabled = false;
+        reloadBtn.disabled = false;
       }
+
+      printBtn.addEventListener('click', () => window.print());
+      reloadBtn.addEventListener('click', () => renderLabels());
+
+      renderLabels();
     </script>
   </body>
 </html>

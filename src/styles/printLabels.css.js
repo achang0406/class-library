@@ -15,7 +15,7 @@ const {
   qrSize,
 } = AVERY_5658;
 
-/** Avery 5658 — stacked QR (0.8" min) + LIB id below. Titles shown in on-screen match list only. */
+/** Avery 5658 — stacked QR (0.8" min) + LIB id below; title in row gap (not on sticker). */
 export const labelPrintStyles = `
 @media screen {
   .label-print-screen {
@@ -65,6 +65,12 @@ export const labelPrintStyles = `
     align-items: center;
     gap: var(--space-6);
   }
+  .label-print-pages-offscreen {
+    position: fixed;
+    left: -10000px;
+    top: 0;
+    pointer-events: none;
+  }
   .label-print-page {
     width: ${sheetWidth};
     height: ${sheetHeight};
@@ -75,8 +81,11 @@ export const labelPrintStyles = `
   .label-print-area {
     outline: 1px dashed var(--color-border);
   }
-  .label-sticker {
+  .label-cell {
     outline: 1px dashed #ccc;
+  }
+  .label-sticker {
+    outline: none;
   }
 }
 
@@ -113,6 +122,7 @@ export const labelPrintStyles = `
     break-after: auto;
   }
   .label-print-area,
+  .label-cell,
   .label-sticker {
     outline: none;
   }
@@ -131,6 +141,13 @@ export const labelPrintStyles = `
   column-gap: ${columnGap};
   grid-auto-rows: ${labelHeight};
   row-gap: ${rowGap};
+}
+
+.label-cell {
+  position: relative;
+  width: ${labelWidth};
+  height: ${labelHeight};
+  box-sizing: border-box;
 }
 
 .label-sticker {
@@ -165,5 +182,26 @@ export const labelPrintStyles = `
   max-width: 100%;
   overflow: hidden;
   white-space: nowrap;
+}
+
+.label-title {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: ${rowGap};
+  margin: 0;
+  padding: 0 1px;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+  font-size: 5.5pt;
+  line-height: 1.05;
+  font-weight: 600;
+  text-align: center;
+  color: #222;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 `;
