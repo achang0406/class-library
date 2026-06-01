@@ -7,8 +7,7 @@ import { getBookByBarcode, markLabelsPrinted } from '../../lib/books.js';
 
 export function LabelVerifyPanel({ initialBooks, onDone }) {
   const [pending, setPending] = useState(initialBooks);
-  const [scanError, setScanError] = useState('');
-  const [scanSuccess, setScanSuccess] = useState(null);
+  const [scanFeedback, setScanFeedback] = useState(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -16,17 +15,19 @@ export function LabelVerifyPanel({ initialBooks, onDone }) {
   }, [initialBooks]);
 
   async function confirmBook(book) {
-    setScanError('');
+    setScanFeedback(null);
     setBusy(true);
     try {
       await markLabelsPrinted([book.id]);
       const wasInList = pending.some((b) => b.id === book.id);
       const remaining = wasInList ? pending.length - 1 : pending.length;
       setPending((prev) => prev.filter((b) => b.id !== book.id));
-      setScanSuccess({ book, remaining });
+      setScanFeedback({ status: 'success', book, remaining });
     } catch (err) {
-      setScanSuccess(null);
-      setScanError(err.message ?? 'Could not save label status.');
+      setScanFeedback({
+        status: 'error',
+        message: err.message ?? 'Could not save label status.',
+      });
     } finally {
       setBusy(false);
     }
@@ -40,19 +41,16 @@ export function LabelVerifyPanel({ initialBooks, onDone }) {
       try {
         const fromDb = await getBookByBarcode(barcode);
         if (!fromDb) {
-          setScanSuccess(null);
-          setScanError(`No book found for ${barcode}.`);
+          setScanFeedback({ status: 'error', message: `No book found for ${barcode}.` });
           return;
         }
         if (fromDb.label_printed_at) {
-          setScanSuccess(null);
-          setScanError(`${barcode} is already validated.`);
+          setScanFeedback({ status: 'already-validated', book: fromDb });
           return;
         }
         book = fromDb;
       } catch (err) {
-        setScanSuccess(null);
-        setScanError(err.message ?? 'Lookup failed.');
+        setScanFeedback({ status: 'error', message: err.message ?? 'Lookup failed.' });
         return;
       }
     }
@@ -70,13 +68,15 @@ export function LabelVerifyPanel({ initialBooks, onDone }) {
       return;
     }
     setBusy(true);
-    setScanError('');
-    setScanSuccess(null);
+    setScanFeedback(null);
     try {
       await markLabelsPrinted(pending.map((b) => b.id));
       setPending([]);
     } catch (err) {
-      setScanError(err.message ?? 'Could not save label status.');
+      setScanFeedback({
+        status: 'error',
+        message: err.message ?? 'Could not save label status.',
+      });
     } finally {
       setBusy(false);
     }
@@ -97,7 +97,7 @@ export function LabelVerifyPanel({ initialBooks, onDone }) {
 
       <BarcodeScanner scannerId="cl-label-verify" mode="qr" active={!busy} onScan={handleScan} />
 
-      {scanSuccess ? (
+      {scanFeedback?.status === 'success' ? (
         <Stack
           gap="var(--space-1)"
           style={{
@@ -113,17 +113,64 @@ export function LabelVerifyPanel({ initialBooks, onDone }) {
             Validated
           </Text>
           <Text variant="body">
-            {scanSuccess.book.title}
-            {scanSuccess.book.author ? ` — ${scanSuccess.book.author}` : ''}
+            {scanFeedback.book.title}
+            {scanFeedback.book.author ? ` — ${scanFeedback.book.author}` : ''}
           </Text>
           <Text variant="label" style={{ fontFamily: 'var(--font-mono)' }}>
-            {scanSuccess.book.barcode}
+            {scanFeedback.book.barcode}
           </Text>
           <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
-            {scanSuccess.remaining > 0
-              ? `${scanSuccess.remaining} book${scanSuccess.remaining === 1 ? '' : 's'} left to validate.`
+            {scanFeedback.remaining > 0
+              ? `${scanFeedback.remaining} book${scanFeedback.remaining === 1 ? '' : 's'} left to validate.`
               : 'All labels validated — you\'re done!'}
           </Text>
+        </Stack>
+      ) : null}
+
+      {scanFeedback?.status === 'already-validated' ? (
+        <Stack
+          gap="var(--space-1)"
+          style={{
+            padding: 'var(--space-3) var(--space-4)',
+            borderRadius: 'var(--radius-sm)',
+            border: '2px solid var(--color-accent)',
+            background: 'color-mix(in srgb, var(--color-accent) 18%, var(--color-card))',
+          }}
+          role="status"
+          aria-live="polite"
+        >
+          <Text variant="emphasis" style={{ color: 'var(--color-text)' }}>
+            Already validated
+          </Text>
+          <Text variant="body">
+            {scanFeedback.book.title}
+            {scanFeedback.book.author ? ` — ${scanFeedback.book.author}` : ''}
+          </Text>
+          <Text variant="label" style={{ fontFamily: 'var(--font-mono)' }}>
+            {scanFeedback.book.barcode}
+          </Text>
+          <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
+            This label was confirmed earlier — no action needed.
+          </Text>
+        </Stack>
+      ) : null}
+
+      {scanFeedback?.status === 'error' ? (
+        <Stack
+          gap="var(--space-1)"
+          style={{
+            padding: 'var(--space-3) var(--space-4)',
+            borderRadius: 'var(--radius-sm)',
+            border: '2px solid var(--color-overdue)',
+            background: 'color-mix(in srgb, var(--color-overdue) 10%, var(--color-card))',
+          }}
+          role="alert"
+          aria-live="polite"
+        >
+          <Text variant="emphasis" style={{ color: 'var(--color-overdue)' }}>
+            Could not validate
+          </Text>
+          <Text variant="body">{scanFeedback.message}</Text>
         </Stack>
       ) : null}
 
@@ -156,8 +203,6 @@ export function LabelVerifyPanel({ initialBooks, onDone }) {
           No books waiting for label validation.
         </Text>
       )}
-
-      {scanError ? <Text style={{ color: 'var(--color-overdue)' }}>{scanError}</Text> : null}
 
       {pending.length > 0 ? (
         <Button variant="ghost" fullWidth disabled={busy} onClick={markAllWithoutScanning}>
