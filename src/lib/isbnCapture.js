@@ -99,11 +99,16 @@ async function readIsbnFromStillImage(file) {
   }
 }
 
-/** Capture the live camera frame and read ISBN from barcode or printed text. */
-export async function captureIsbnFromScanner(scannerId) {
+/** Grab a still JPEG from the live scanner without stopping the camera. */
+export async function captureIsbnFrame(scannerId) {
   const video = getScannerVideoElement(scannerId);
   const canvas = captureVideoFrame(video);
-  const file = await canvasToJpegFile(canvas);
+  return canvasToJpegFile(canvas);
+}
+
+/** Capture the live camera frame and read ISBN from barcode or printed text. */
+export async function captureIsbnFromScanner(scannerId) {
+  const file = await captureIsbnFrame(scannerId);
   return readIsbnFromStillImage(file);
 }
 

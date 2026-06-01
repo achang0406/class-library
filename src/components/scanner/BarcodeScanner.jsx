@@ -24,6 +24,59 @@ const ISBN_BARCODE_FORMATS = [
 
 const DEFAULT_CAMERA_CONSTRAINTS = { facingMode: 'environment' };
 
+/** Prefer higher quality on devices that support it; fall back if start fails. */
+const ISBN_CAMERA_CONSTRAINTS = [
+  { facingMode: 'environment' },
+  DEFAULT_CAMERA_CONSTRAINTS,
+];
+
+function formatCameraError(err) {
+  const message =
+    typeof err === 'string' ? err : err?.message ?? err?.name ?? '';
+  if (!message) {
+    return 'Could not access camera. Use HTTPS or allow camera permission.';
+  }
+  if (/NotAllowed|Permission/i.test(message)) {
+    return 'Camera permission denied. Allow camera access in browser settings, then reload.';
+  }
+  if (/NotFound|DevicesNotFound/i.test(message)) {
+    return 'No camera found on this device.';
+  }
+  if (/NotReadable|TrackStart|in use/i.test(message)) {
+    return 'Camera is in use by another app. Close other camera apps and try again.';
+  }
+  if (/Overconstrained|Constraint/i.test(message)) {
+    return 'Camera settings not supported on this device. Reload and try again.';
+  }
+  if (!/^https:/i.test(window.location.protocol) && window.location.hostname !== 'localhost') {
+    return `${message} Camera requires HTTPS. Open https://class-library.vercel.app instead.`;
+  }
+  return message;
+}
+
+async function startScannerCamera(scanner, preferredConstraints, cameraConfig, onDecode) {
+  const attempts =
+    preferredConstraints === DEFAULT_CAMERA_CONSTRAINTS
+      ? [DEFAULT_CAMERA_CONSTRAINTS]
+      : Array.isArray(preferredConstraints)
+        ? preferredConstraints
+        : [preferredConstraints, DEFAULT_CAMERA_CONSTRAINTS];
+
+  let lastError;
+  for (const constraints of attempts) {
+    try {
+      await scanner.start(constraints, cameraConfig, onDecode, () => {});
+      return;
+    } catch (err) {
+      lastError = err;
+      if (scanner.isScanning) {
+        await scanner.stop().catch(() => {});
+      }
+    }
+  }
+  throw lastError;
+}
+
 const SCAN_MODES = {
   qr: {
     formats: undefined,
@@ -37,12 +90,7 @@ const SCAN_MODES = {
     qrbox: undefined,
     fps: 15,
     hint: 'Hold 8–12″ back, tap the barcode to focus, or use Capture ISBN below',
-    cameraConstraints: {
-      facingMode: 'environment',
-      focusMode: { ideal: 'continuous' },
-      width: { ideal: 1920 },
-      height: { ideal: 1080 },
-    },
+    cameraConstraints: ISBN_CAMERA_CONSTRAINTS,
   },
 };
 
@@ -77,6 +125,7 @@ export function BarcodeScanner({
 
     let cancelled = false;
     handledRef.current = false;
+    setError('');
 
     async function start() {
       try {
@@ -95,7 +144,8 @@ export function BarcodeScanner({
           ...(scanQrbox ? { qrbox: scanQrbox } : {}),
         };
 
-        await scanner.start(
+        await startScannerCamera(
+          scanner,
           modeConfig.cameraConstraints,
           cameraConfig,
           (decoded) => {
@@ -107,7 +157,6 @@ export function BarcodeScanner({
               handledRef.current = false;
             }, SCAN_COOLDOWN_MS);
           },
-          () => {},
         );
 
         if (!cancelled) {
@@ -117,9 +166,7 @@ export function BarcodeScanner({
         }
       } catch (err) {
         if (!cancelled) {
-          setError(
-            err?.message ?? 'Could not access camera. Use HTTPS or allow camera permission.',
-          );
+          setError(formatCameraError(err));
         }
       }
     }

@@ -5,7 +5,7 @@ import { Input } from '../ui/Input.jsx';
 import { Spinner } from '../ui/Spinner.jsx';
 import { Stack } from '../ui/Stack.jsx';
 import { Text } from '../ui/Text.jsx';
-import { captureIsbnFromScanner, readIsbnFromPhotoFile } from '../../lib/isbnCapture.js';
+import { captureIsbnFrame, readIsbnFromPhotoFile } from '../../lib/isbnCapture.js';
 
 const ISBN_SCANNER_ID = 'cl-isbn-scanner';
 
@@ -15,7 +15,7 @@ export function IsbnScanPanel({ onLookup, onCancel, busy = false, error = '' }) 
   const [captureError, setCaptureError] = useState('');
   const photoInputRef = useRef(null);
 
-  const disabled = busy || captureBusy;
+  const lookupBusy = busy;
   const displayError = error || captureError;
 
   function submitManual(e) {
@@ -25,10 +25,18 @@ export function IsbnScanPanel({ onLookup, onCancel, busy = false, error = '' }) 
   }
 
   async function handleCapture() {
-    setCaptureBusy(true);
     setCaptureError('');
+    let file;
     try {
-      const isbn = await captureIsbnFromScanner(ISBN_SCANNER_ID);
+      file = await captureIsbnFrame(ISBN_SCANNER_ID);
+    } catch (err) {
+      setCaptureError(err.message ?? 'Could not read ISBN from camera.');
+      return;
+    }
+
+    setCaptureBusy(true);
+    try {
+      const isbn = await readIsbnFromPhotoFile(file);
       await onLookup(isbn);
     } catch (err) {
       setCaptureError(err.message ?? 'Could not read ISBN from camera.');
@@ -75,12 +83,12 @@ export function IsbnScanPanel({ onLookup, onCancel, busy = false, error = '' }) 
       <BarcodeScanner
         scannerId={ISBN_SCANNER_ID}
         mode="isbn"
-        active={!disabled}
+        active={!lookupBusy}
         onScan={onLookup}
       />
 
       <Stack gap="var(--space-2)">
-        <Button variant="accent" fullWidth disabled={disabled} onClick={handleCapture}>
+        <Button variant="accent" fullWidth disabled={lookupBusy || captureBusy} onClick={handleCapture}>
           Capture ISBN from camera
         </Button>
         <Text variant="label" style={{ color: 'var(--color-text-muted)', textAlign: 'center' }}>
@@ -97,7 +105,7 @@ export function IsbnScanPanel({ onLookup, onCancel, busy = false, error = '' }) 
         <Button
           variant="secondary"
           fullWidth
-          disabled={disabled}
+          disabled={lookupBusy || captureBusy}
           onClick={() => photoInputRef.current?.click()}
         >
           Upload ISBN photo
@@ -113,17 +121,22 @@ export function IsbnScanPanel({ onLookup, onCancel, busy = false, error = '' }) 
             onChange={(e) => setManualIsbn(e.target.value.replace(/[^\d-]/g, ''))}
             inputMode="numeric"
           />
-          <Button type="submit" variant="secondary" fullWidth disabled={!manualIsbn.trim() || disabled}>
+          <Button
+            type="submit"
+            variant="secondary"
+            fullWidth
+            disabled={!manualIsbn.trim() || lookupBusy || captureBusy}
+          >
             Look up ISBN
           </Button>
         </Stack>
       </form>
 
-      {disabled ? (
+      {lookupBusy || captureBusy ? (
         <Stack align="center" gap="var(--space-2)">
           <Spinner />
           <Text variant="label">
-            {busy ? 'Looking up on Open Library…' : 'Reading ISBN from image…'}
+            {lookupBusy ? 'Looking up on Open Library…' : 'Reading ISBN from image…'}
           </Text>
         </Stack>
       ) : null}
@@ -131,7 +144,7 @@ export function IsbnScanPanel({ onLookup, onCancel, busy = false, error = '' }) 
       {displayError ? <Text style={{ color: 'var(--color-overdue)' }}>{displayError}</Text> : null}
 
       {onCancel ? (
-        <Button variant="ghost" fullWidth onClick={onCancel} disabled={disabled}>
+        <Button variant="ghost" fullWidth onClick={onCancel} disabled={lookupBusy || captureBusy}>
           Cancel scan
         </Button>
       ) : null}
