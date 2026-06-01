@@ -52,6 +52,34 @@ export async function lookupOpenLibraryByIsbn(rawIsbn, { signal } = {}) {
   return result;
 }
 
+/** Fetch Lexile + grade for a book when Open Library has it (ISBN or work key). */
+export async function lookupOpenLibraryLexile({ isbn, openLibraryKey, signal } = {}) {
+  if (isbn) {
+    const byIsbn = await lookupOpenLibraryByIsbn(isbn, { signal });
+    if (byIsbn?.lexile != null) {
+      return { lexile: byIsbn.lexile, readingLevel: byIsbn.readingLevel };
+    }
+  }
+
+  if (openLibraryKey) {
+    const params = new URLSearchParams({
+      q: `key:${openLibraryKey}`,
+      limit: '1',
+      fields: 'key,lexile',
+    });
+    const res = await fetch(`https://openlibrary.org/search.json?${params}`, { signal });
+    if (!res.ok) throw new Error('Open Library lookup failed');
+
+    const json = await res.json();
+    const lexile = normalizeLexile(json.docs?.[0]?.lexile);
+    if (lexile != null) {
+      return { lexile, readingLevel: readingLevelFromLexile(lexile) };
+    }
+  }
+
+  return null;
+}
+
 export async function searchOpenLibrary(query, { signal, limit = 8 } = {}) {
   const q = query.trim();
   if (q.length < 3) return [];

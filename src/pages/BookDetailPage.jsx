@@ -8,9 +8,9 @@ import { Stack } from '../components/ui/Stack.jsx';
 import { Text } from '../components/ui/Text.jsx';
 import { SupabaseBanner } from '../components/layout/SupabaseBanner.jsx';
 import { PageContainer } from '../components/layout/PageContainer.jsx';
-import { getBookById, deleteBook, markLabelsNeeded } from '../lib/books.js';
+import { getBookById, deleteBook, markLabelsNeeded, refreshBookLexileIfMissing } from '../lib/books.js';
 import { getActiveCheckoutForBook, enrichCheckout } from '../lib/checkouts.js';
-import { formatLexile } from '../lib/lexile.js';
+import { resolveBookReadingDisplay } from '../lib/lexile.js';
 import { getOverdueDays } from '../lib/settings.js';
 import { isTeacherLoggedIn } from '../lib/teacherSession.js';
 
@@ -39,6 +39,13 @@ export default function BookDetailPage() {
           return;
         }
         setBook(b);
+        if (b.lexile == null && (b.isbn || b.open_library_key)) {
+          refreshBookLexileIfMissing(b)
+            .then((updated) => {
+              if (!cancelled && updated.id === b.id) setBook(updated);
+            })
+            .catch(() => {});
+        }
         if (b.status === 'checked_out') {
           const c = await getActiveCheckoutForBook(b.id);
           if (!cancelled) setCheckout(c ? enrichCheckout(c) : null);
@@ -114,6 +121,7 @@ export default function BookDetailPage() {
 
   const overdueDays = getOverdueDays();
   const isOverdue = checkout && checkout.daysOut > overdueDays;
+  const reading = resolveBookReadingDisplay(book);
 
   return (
     <PageContainer>
@@ -135,17 +143,17 @@ export default function BookDetailPage() {
                 {book.status === 'available' ? 'Available' : 'Checked out'}
               </Badge>
               {book.genre ? <Badge variant="neutral">{book.genre}</Badge> : null}
-              {book.reading_level ? <Badge variant="neutral">{book.reading_level}</Badge> : null}
+              {reading.readingLevel ? <Badge variant="neutral">{reading.readingLevel}</Badge> : null}
               {!book.label_printed_at ? <Badge variant="needs-label">Needs label</Badge> : null}
             </Stack>
             {book.publish_year ? <Text variant="label">Published {book.publish_year}</Text> : null}
-            {book.lexile != null ? (
+            {reading.lexileLabel ? (
               <Text variant="label">
-                Lexile {formatLexile(book.lexile)}
-                {book.reading_level ? ` · ${book.reading_level}` : ''}
+                Lexile {reading.lexileLabel}
+                {reading.readingLevel ? ` · ${reading.readingLevel}` : ''}
               </Text>
-            ) : book.reading_level ? (
-              <Text variant="label">{book.reading_level}</Text>
+            ) : reading.readingLevel ? (
+              <Text variant="label">{reading.readingLevel}</Text>
             ) : null}
             {book.isbn ? <Text variant="label">ISBN {book.isbn}</Text> : null}
             <Text variant="label" style={{ fontFamily: 'var(--font-mono)' }}>

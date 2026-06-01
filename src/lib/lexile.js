@@ -60,3 +60,14 @@ export function formatLexile(lexile) {
 export function readingLevelFromLexile(lexile) {
   return lexileToGradeLevel(normalizeLexile(lexile) ?? lexile);
 }
+
+/** @param {{ lexile?: number | null, reading_level?: string | null }} book */
+export function resolveBookReadingDisplay(book) {
+  const lexile = book?.lexile ?? null;
+  const readingLevel = book?.reading_level ?? lexileToGradeLevel(lexile);
+  return {
+    lexile,
+    readingLevel,
+    lexileLabel: formatLexile(lexile),
+  };
+}

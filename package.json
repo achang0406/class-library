@@ -14,6 +14,7 @@
     "format:check": "prettier --check .",
     "lint:fix": "eslint . --fix",
     "db:seed": "node scripts/seed.mjs",
+    "db:backfill-lexile": "node scripts/backfill-lexile.mjs",
     "db:backfill-borrowers": "node scripts/backfill-borrower-ids.mjs"
   },
   "dependencies": {

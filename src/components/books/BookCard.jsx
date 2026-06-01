@@ -3,10 +3,11 @@ import { Badge } from '../ui/Badge.jsx';
 import { BookCover } from '../ui/BookCover.jsx';
 import { Card } from '../ui/Card.jsx';
 import { Text } from '../ui/Text.jsx';
-import { formatLexile } from '../../lib/lexile.js';
+import { resolveBookReadingDisplay } from '../../lib/lexile.js';
 
 export function BookCard({ book }) {
   const badgeVariant = book.status === 'available' ? 'available' : 'checked-out';
+  const reading = resolveBookReadingDisplay(book);
 
   return (
     <Link to={`/books/${book.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
@@ -33,11 +34,11 @@ export function BookCard({ book }) {
           {book.title}
         </Text>
         <Text variant="label">{book.author ?? 'Unknown author'}</Text>
-        {book.lexile != null || book.reading_level ? (
+        {reading.lexileLabel || reading.readingLevel ? (
           <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
-            {book.lexile != null ? formatLexile(book.lexile) : ''}
-            {book.lexile != null && book.reading_level ? ' · ' : ''}
-            {book.reading_level ?? ''}
+            {reading.lexileLabel ?? ''}
+            {reading.lexileLabel && reading.readingLevel ? ' · ' : ''}
+            {reading.readingLevel ?? ''}
           </Text>
         ) : null}
         {book.activeCheckout ? (
