@@ -13,6 +13,7 @@ import TeacherLabelsPrintPage from './pages/teacher/TeacherLabelsPrintPage.jsx';
 import TeacherLabelsVerifyPage from './pages/teacher/TeacherLabelsVerifyPage.jsx';
 import TeacherPeoplePage from './pages/teacher/TeacherPeoplePage.jsx';
 import TeacherOverduePage from './pages/teacher/TeacherOverduePage.jsx';
+import TeacherStudentPage from './pages/teacher/TeacherStudentPage.jsx';
 import TeacherImportPage from './pages/teacher/TeacherImportPage.jsx';
 
 export default function App() {
@@ -67,6 +68,12 @@ export default function App() {
             element={<AppShell title="Overdue" backTo="/teacher/dashboard" />}
           >
             <Route index element={<TeacherOverduePage />} />
+          </Route>
+          <Route
+            path="/teacher/students/:id"
+            element={<AppShell title="Student Profile" backTo="/teacher/people" />}
+          >
+            <Route index element={<TeacherStudentPage />} />
           </Route>
           <Route
             path="/teacher/import"

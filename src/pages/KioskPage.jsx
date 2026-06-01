@@ -100,13 +100,14 @@ export default function KioskPage() {
     }
   }, []);
 
-  async function confirmBorrower(name, type) {
+  async function confirmBorrower(name, type, borrowerId = null) {
     if (!book || !name.trim()) return;
     setBusy(true);
     setError('');
     try {
       await checkoutBook({
         bookId: book.id,
+        borrowerId,
         borrowerName: name.trim(),
         borrowerType: type,
       });
@@ -212,7 +213,7 @@ export default function KioskPage() {
                     key={s.id}
                     variant="secondary"
                     disabled={busy}
-                    onClick={() => confirmBorrower(s.display_name, 'student')}
+                    onClick={() => confirmBorrower(s.display_name, 'student', s.id)}
                     style={{ minHeight: 'var(--space-8)' }}
                   >
                     {s.display_name}
@@ -233,7 +234,7 @@ export default function KioskPage() {
                       key={s.id}
                       variant="secondary"
                       disabled={busy}
-                      onClick={() => confirmBorrower(s.display_name, 'staff')}
+                      onClick={() => confirmBorrower(s.display_name, 'staff', s.id)}
                     >
                       {s.display_name}
                     </Button>

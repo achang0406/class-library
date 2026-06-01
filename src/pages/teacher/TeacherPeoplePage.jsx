@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/Button.jsx';
 import { Input } from '../../components/ui/Input.jsx';
 import { Stack } from '../../components/ui/Stack.jsx';
@@ -93,7 +94,15 @@ export default function TeacherPeoplePage() {
                 background: 'var(--color-card)',
               }}
             >
-              <Text variant="emphasis">{b.display_name}</Text>
+              <Text variant="emphasis">
+                {tab === 'student' ? (
+                  <Link to={`/teacher/students/${b.id}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                    {b.display_name}
+                  </Link>
+                ) : (
+                  b.display_name
+                )}
+              </Text>
               <Stack gap="var(--space-2)" style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Badge variant="neutral">Active</Badge>
                 <Button variant="ghost" onClick={() => handleRemove(b.id)}>

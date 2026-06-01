@@ -29,3 +29,14 @@ export function normalizeGenre(value) {
   if (GENRES.includes(value)) return value;
   return mapSubjectsToGenre([value ?? '']);
 }
+
+export const GENRE_SEARCH_TERMS = {
+  'Picture Book': 'picture books juvenile',
+  Fiction: 'juvenile fiction',
+  'Non-Fiction': 'juvenile nonfiction',
+  Biography: 'biography juvenile',
+  Poetry: 'poetry children',
+  'Graphic Novel': 'graphic novel juvenile',
+  Reference: 'reference juvenile',
+  Other: 'children books',
+};

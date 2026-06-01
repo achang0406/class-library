@@ -13,7 +13,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:fix": "eslint . --fix",
-    "db:seed": "node scripts/seed.mjs"
+    "db:seed": "node scripts/seed.mjs",
+    "db:backfill-borrowers": "node scripts/backfill-borrower-ids.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",

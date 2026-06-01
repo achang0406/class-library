@@ -7,6 +7,13 @@ function requireClient() {
   return supabase;
 }
 
+export async function getBorrowerById(id) {
+  const client = requireClient();
+  const { data, error } = await client.from('borrowers').select('*').eq('id', id).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 export async function listBorrowers({ type, activeOnly = true } = {}) {
   const client = requireClient();
   let query = client.from('borrowers').select('*').order('display_name', { ascending: true });

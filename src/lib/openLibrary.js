@@ -1,4 +1,4 @@
-import { mapSubjectsToGenre } from './genreMap.js';
+import { mapSubjectsToGenre, GENRE_SEARCH_TERMS } from './genreMap.js';
 import { normalizeLexile, readingLevelFromLexile } from './lexile.js';
 import { normalizeIsbn } from './isbn.js';
 
@@ -67,4 +67,15 @@ export async function searchOpenLibrary(query, { signal, limit = 8 } = {}) {
   const results = (json.docs ?? []).map(mapOpenLibraryDoc);
   CACHE.set(cacheKey, results);
   return results;
+}
+
+export async function searchOpenLibraryByGenre(genre, { signal, limit = 8 } = {}) {
+  const term = GENRE_SEARCH_TERMS[genre] ?? genre;
+  return searchOpenLibrary(term, { signal, limit });
+}
+
+export async function searchOpenLibraryByAuthor(author, { signal, limit = 8 } = {}) {
+  const q = author.trim();
+  if (!q) return [];
+  return searchOpenLibrary(`author:"${q}"`, { signal, limit });
 }
