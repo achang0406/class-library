@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button.jsx';
 import { Card } from '../../components/ui/Card.jsx';
 import { Inline } from '../../components/ui/Inline.jsx';
@@ -7,10 +7,10 @@ import { Stack } from '../../components/ui/Stack.jsx';
 import { Text } from '../../components/ui/Text.jsx';
 import { SupabaseBanner } from '../../components/layout/SupabaseBanner.jsx';
 import { PageContainer } from '../../components/layout/PageContainer.jsx';
+import { useTeacherSession } from '../../components/layout/TeacherSessionProvider.jsx';
 import { getBookStats } from '../../lib/books.js';
 import { listOverdueCheckouts } from '../../lib/checkouts.js';
 import { isSupabaseConfigured } from '../../lib/supabase.js';
-import { setTeacherLoggedIn } from '../../lib/teacherSession.js';
 
 const LINKS = [
   { to: '/teacher/add', label: 'Add Book' },
@@ -24,6 +24,8 @@ const LINKS = [
 ];
 
 export default function TeacherDashboardPage() {
+  const navigate = useNavigate();
+  const { signOut } = useTeacherSession();
   const [stats, setStats] = useState({ total: '—', checkedOut: '—', overdue: '—' });
 
   useEffect(() => {
@@ -39,9 +41,9 @@ export default function TeacherDashboardPage() {
       .catch(() => {});
   }, []);
 
-  function signOut() {
-    setTeacherLoggedIn(false);
-    window.location.href = '/';
+  function handleSignOut() {
+    signOut();
+    navigate('/');
   }
 
   return (
@@ -55,7 +57,7 @@ export default function TeacherDashboardPage() {
           <Text as="h1" variant="title">
             Teacher Dashboard
           </Text>
-          <Button variant="ghost" onClick={signOut}>
+          <Button variant="ghost" onClick={handleSignOut}>
             Sign out
           </Button>
         </Stack>

@@ -12,7 +12,7 @@ import { getBookById, deleteBook, markLabelsNeeded, refreshBookLexileIfMissing }
 import { getActiveCheckoutForBook, enrichCheckout } from '../lib/checkouts.js';
 import { resolveBookReadingDisplay } from '../lib/lexile.js';
 import { getOverdueDays } from '../lib/settings.js';
-import { isTeacherLoggedIn } from '../lib/teacherSession.js';
+import { useTeacherSession } from '../components/layout/TeacherSessionProvider.jsx';
 
 export default function BookDetailPage() {
   const { id } = useParams();
@@ -23,7 +23,7 @@ export default function BookDetailPage() {
   const [error, setError] = useState('');
   const [removing, setRemoving] = useState(false);
   const [labelBusy, setLabelBusy] = useState(false);
-  const isTeacher = isTeacherLoggedIn();
+  const { isTeacher } = useTeacherSession();
 
   useEffect(() => {
     let cancelled = false;

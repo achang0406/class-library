@@ -34,7 +34,7 @@ Edit `.env.local`:
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
-VITE_TEACHER_PASSWORD=choose-a-classroom-password
+VITE_TEACHER_PASSCODE=1234
 ```
 
 ### 3. Install & run
@@ -135,4 +135,4 @@ scripts/seed.mjs       Sample data
 
 ## Teacher password
 
-The teacher password is checked client-side (`VITE_TEACHER_PASSWORD`). It keeps casual visitors out of admin screens; the Supabase anon key is still required for data access. Use an unlisted URL for the classroom.
+The teacher passcode is checked client-side (`VITE_TEACHER_PASSCODE`, four digits). It keeps casual visitors out of admin screens; the Supabase anon key is still required for data access. Teacher mode auto-signs-out after 30 minutes idle and shows a banner on student-facing pages while active.

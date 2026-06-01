@@ -4,11 +4,11 @@ import { BookCover } from '../ui/BookCover.jsx';
 import { Card } from '../ui/Card.jsx';
 import { Text } from '../ui/Text.jsx';
 import { resolveBookReadingDisplay } from '../../lib/lexile.js';
-import { isTeacherLoggedIn } from '../../lib/teacherSession.js';
+import { useTeacherSession } from '../layout/TeacherSessionProvider.jsx';
 
 export function BookCard({ book }) {
   const badgeVariant = book.status === 'available' ? 'available' : 'checked-out';
-  const isTeacher = isTeacherLoggedIn();
+  const { isTeacher } = useTeacherSession();
   const reading = isTeacher ? resolveBookReadingDisplay(book) : null;
 
   return (

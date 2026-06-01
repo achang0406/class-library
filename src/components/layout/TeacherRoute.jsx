@@ -1,9 +1,12 @@
 import { Navigate, Outlet } from 'react-router-dom';
-import { isTeacherLoggedIn } from '../../lib/teacherSession.js';
+import { useTeacherSession } from './TeacherSessionProvider.jsx';
 
 export function TeacherRoute() {
-  if (!isTeacherLoggedIn()) {
+  const { isTeacher } = useTeacherSession();
+
+  if (!isTeacher) {
     return <Navigate to="/teacher" replace />;
   }
+
   return <Outlet />;
 }

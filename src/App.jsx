@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/layout/AppShell.jsx';
+import { TeacherSessionProvider } from './components/layout/TeacherSessionProvider.jsx';
 import { TeacherRoute } from './components/layout/TeacherRoute.jsx';
 import HomePage from './pages/HomePage.jsx';
 import BrowsePage from './pages/BrowsePage.jsx';
@@ -20,7 +21,8 @@ import TeacherImportPage from './pages/teacher/TeacherImportPage.jsx';
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
+      <TeacherSessionProvider>
+        <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/browse" element={<AppShell title="Browse Library" backTo="/" />}>
           <Route index element={<BrowsePage />} />
@@ -90,7 +92,8 @@ export default function App() {
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+        </Routes>
+      </TeacherSessionProvider>
     </BrowserRouter>
   );
 }

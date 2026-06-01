@@ -5,29 +5,48 @@ import { Input } from '../../components/ui/Input.jsx';
 import { Stack } from '../../components/ui/Stack.jsx';
 import { Text } from '../../components/ui/Text.jsx';
 import { PageContainer } from '../../components/layout/PageContainer.jsx';
+import { useTeacherSession } from '../../components/layout/TeacherSessionProvider.jsx';
 import {
-  isTeacherLoggedIn,
-  setTeacherLoggedIn,
-  verifyTeacherPassword,
+  isTeacherPasscodeConfigured,
+  verifyTeacherPasscode,
 } from '../../lib/teacherSession.js';
 
 export default function TeacherLoginPage() {
   const navigate = useNavigate();
-  const [password, setPassword] = useState('');
+  const { isTeacher, signIn } = useTeacherSession();
+  const [passcode, setPasscode] = useState('');
   const [error, setError] = useState('');
 
-  if (isTeacherLoggedIn()) {
+  if (isTeacher) {
     return <Navigate to="/teacher/dashboard" replace />;
+  }
+
+  function trySignIn(code) {
+    if (!isTeacherPasscodeConfigured()) {
+      setError('Teacher passcode is not configured. Set VITE_TEACHER_PASSCODE to a 4-digit code.');
+      return;
+    }
+    if (verifyTeacherPasscode(code)) {
+      signIn();
+      navigate('/teacher/dashboard');
+      return;
+    }
+    setError('Incorrect passcode.');
+    setPasscode('');
   }
 
   function handleSubmit(e) {
     e.preventDefault();
-    if (verifyTeacherPassword(password)) {
-      setTeacherLoggedIn(true);
-      navigate('/teacher/dashboard');
-      return;
+    trySignIn(passcode);
+  }
+
+  function handlePasscodeChange(e) {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 4);
+    setPasscode(digits);
+    setError('');
+    if (digits.length === 4) {
+      trySignIn(digits);
     }
-    setError('Incorrect password.');
   }
 
   return (
@@ -38,20 +57,25 @@ export default function TeacherLoginPage() {
             Teacher Login
           </Text>
           <Text variant="body" style={{ color: 'var(--color-text-muted)' }}>
-            Enter password to manage your library.
+            Enter your 4-digit passcode to manage the library.
           </Text>
         </Stack>
         <form onSubmit={handleSubmit}>
           <Stack gap="var(--space-4)">
             <Input
-              label="Password"
+              label="4-digit passcode"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="\d{4}"
+              maxLength={4}
+              placeholder="••••"
+              value={passcode}
+              onChange={handlePasscodeChange}
+              style={{ fontFamily: 'var(--font-mono)', letterSpacing: '0.35em', fontSize: '1.25rem' }}
             />
             {error ? <Text style={{ color: 'var(--color-overdue)' }}>{error}</Text> : null}
-            <Button type="submit" variant="primary" fullWidth>
+            <Button type="submit" variant="primary" fullWidth disabled={passcode.length !== 4}>
               Sign In
             </Button>
           </Stack>

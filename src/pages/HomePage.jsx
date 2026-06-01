@@ -4,10 +4,13 @@ import { Stack } from '../components/ui/Stack.jsx';
 import { Text } from '../components/ui/Text.jsx';
 import { PageContainer } from '../components/layout/PageContainer.jsx';
 import { InstallAppLink } from '../components/layout/InstallAppLink.jsx';
+import { TeacherModeBanner } from '../components/layout/TeacherModeBanner.jsx';
 
 export default function HomePage() {
   return (
-    <PageContainer narrow>
+    <>
+      <TeacherModeBanner />
+      <PageContainer narrow>
       <Stack
         gap="var(--space-6)"
         style={{ paddingTop: 'var(--space-8)', paddingBottom: 'var(--space-8)' }}
@@ -40,5 +43,6 @@ export default function HomePage() {
         <InstallAppLink />
       </Stack>
     </PageContainer>
+    </>
   );
 }
