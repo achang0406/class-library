@@ -4,17 +4,28 @@ import { Text } from '../ui/Text.jsx';
 import { Button } from '../ui/Button.jsx';
 
 const SCANNER_ID = 'cl-barcode-scanner';
+const SCAN_COOLDOWN_MS = 1200;
+
+const ISBN_BARCODE_FORMATS = [
+  Html5QrcodeSupportedFormats.EAN_13,
+  Html5QrcodeSupportedFormats.EAN_8,
+  Html5QrcodeSupportedFormats.UPC_A,
+  Html5QrcodeSupportedFormats.UPC_E,
+  Html5QrcodeSupportedFormats.CODE_128,
+];
 
 const SCAN_MODES = {
   qr: {
     formats: undefined,
     qrbox: { width: 260, height: 260 },
+    fps: 10,
     hint: 'Point camera at the QR sticker on the book',
   },
   isbn: {
-    formats: [Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8],
-    qrbox: { width: 280, height: 120 },
-    hint: 'Point camera at the ISBN barcode on the back cover',
+    formats: ISBN_BARCODE_FORMATS,
+    qrbox: undefined,
+    fps: 15,
+    hint: 'Fill the frame with the ISBN barcode or printed ISBN number',
   },
 };
 
@@ -32,6 +43,7 @@ export function BarcodeScanner({
   const modeConfig = SCAN_MODES[mode] ?? SCAN_MODES.qr;
   const scanFormats = modeConfig.formats;
   const scanQrbox = modeConfig.qrbox;
+  const scanFps = modeConfig.fps;
   const scanHint = modeConfig.hint;
 
   useEffect(() => {
@@ -47,18 +59,31 @@ export function BarcodeScanner({
     async function start() {
       try {
         const config = scanFormats
-          ? { verbose: false, formatsToSupport: scanFormats }
+          ? {
+              verbose: false,
+              formatsToSupport: scanFormats,
+              useBarCodeDetectorIfSupported: true,
+            }
           : { verbose: false };
         const scanner = new Html5Qrcode(scannerId, config);
         scannerRef.current = scanner;
+
+        const cameraConfig = {
+          fps: scanFps,
+          ...(scanQrbox ? { qrbox: scanQrbox } : {}),
+        };
+
         await scanner.start(
           { facingMode: 'environment' },
-          { fps: 10, qrbox: scanQrbox },
+          cameraConfig,
           (decoded) => {
             if (handledRef.current) return;
             handledRef.current = true;
             const value = mode === 'qr' ? decoded.trim().toUpperCase() : decoded.trim();
             onScanRef.current(value);
+            window.setTimeout(() => {
+              handledRef.current = false;
+            }, SCAN_COOLDOWN_MS);
           },
           () => {},
         );
@@ -82,7 +107,7 @@ export function BarcodeScanner({
         scanner.stop().catch(() => {});
       }
     };
-  }, [active, scannerId, mode, scanFormats, scanQrbox]);
+  }, [active, scannerId, mode, scanFormats, scanQrbox, scanFps]);
 
   return (
     <div style={{ width: '100%' }}>
@@ -90,7 +115,7 @@ export function BarcodeScanner({
         id={scannerId}
         style={{
           width: '100%',
-          minHeight: mode === 'isbn' ? 200 : 240,
+          minHeight: mode === 'isbn' ? 240 : 240,
           borderRadius: 'var(--radius-md)',
           overflow: 'hidden',
           border: '2px dashed var(--color-primary)',

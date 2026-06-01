@@ -1,20 +1,57 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { BarcodeScanner } from '../scanner/BarcodeScanner.jsx';
 import { Button } from '../ui/Button.jsx';
 import { Input } from '../ui/Input.jsx';
 import { Spinner } from '../ui/Spinner.jsx';
 import { Stack } from '../ui/Stack.jsx';
 import { Text } from '../ui/Text.jsx';
+import { captureIsbnFromScanner, readIsbnFromPhotoFile } from '../../lib/isbnCapture.js';
 
 const ISBN_SCANNER_ID = 'cl-isbn-scanner';
 
 export function IsbnScanPanel({ onLookup, onCancel, busy = false, error = '' }) {
   const [manualIsbn, setManualIsbn] = useState('');
+  const [captureBusy, setCaptureBusy] = useState(false);
+  const [captureError, setCaptureError] = useState('');
+  const photoInputRef = useRef(null);
+
+  const disabled = busy || captureBusy;
+  const displayError = error || captureError;
 
   function submitManual(e) {
     e?.preventDefault();
     const trimmed = manualIsbn.trim();
     if (trimmed) onLookup(trimmed);
+  }
+
+  async function handleCapture() {
+    setCaptureBusy(true);
+    setCaptureError('');
+    try {
+      const isbn = await captureIsbnFromScanner(ISBN_SCANNER_ID);
+      await onLookup(isbn);
+    } catch (err) {
+      setCaptureError(err.message ?? 'Could not read ISBN from camera.');
+    } finally {
+      setCaptureBusy(false);
+    }
+  }
+
+  async function handlePhotoChange(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setCaptureBusy(true);
+    setCaptureError('');
+    try {
+      const isbn = await readIsbnFromPhotoFile(file);
+      await onLookup(isbn);
+    } catch (err) {
+      setCaptureError(err.message ?? 'Could not read ISBN from photo.');
+    } finally {
+      setCaptureBusy(false);
+    }
   }
 
   return (
@@ -30,16 +67,42 @@ export function IsbnScanPanel({ onLookup, onCancel, busy = false, error = '' }) 
       <Stack gap="var(--space-1)">
         <Text variant="emphasis">Scan ISBN on back cover</Text>
         <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
-          Use the printed barcode above the ISBN number — not your LIB- checkout sticker.
+          Live scan reads the barcode automatically. If that fails, capture the printed ISBN text
+          instead — not your LIB- checkout sticker.
         </Text>
       </Stack>
 
       <BarcodeScanner
         scannerId={ISBN_SCANNER_ID}
         mode="isbn"
-        active={!busy}
+        active={!disabled}
         onScan={onLookup}
       />
+
+      <Stack gap="var(--space-2)">
+        <Button variant="accent" fullWidth disabled={disabled} onClick={handleCapture}>
+          Capture ISBN from camera
+        </Button>
+        <Text variant="label" style={{ color: 'var(--color-text-muted)', textAlign: 'center' }}>
+          Hold the printed ISBN number in the frame, then tap capture.
+        </Text>
+        <input
+          ref={photoInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          style={{ display: 'none' }}
+          onChange={handlePhotoChange}
+        />
+        <Button
+          variant="secondary"
+          fullWidth
+          disabled={disabled}
+          onClick={() => photoInputRef.current?.click()}
+        >
+          Upload ISBN photo
+        </Button>
+      </Stack>
 
       <form onSubmit={submitManual}>
         <Stack gap="var(--space-2)">
@@ -50,23 +113,25 @@ export function IsbnScanPanel({ onLookup, onCancel, busy = false, error = '' }) 
             onChange={(e) => setManualIsbn(e.target.value.replace(/[^\d-]/g, ''))}
             inputMode="numeric"
           />
-          <Button type="submit" variant="secondary" fullWidth disabled={!manualIsbn.trim() || busy}>
+          <Button type="submit" variant="secondary" fullWidth disabled={!manualIsbn.trim() || disabled}>
             Look up ISBN
           </Button>
         </Stack>
       </form>
 
-      {busy ? (
+      {disabled ? (
         <Stack align="center" gap="var(--space-2)">
           <Spinner />
-          <Text variant="label">Looking up on Open Library…</Text>
+          <Text variant="label">
+            {busy ? 'Looking up on Open Library…' : 'Reading ISBN from image…'}
+          </Text>
         </Stack>
       ) : null}
 
-      {error ? <Text style={{ color: 'var(--color-overdue)' }}>{error}</Text> : null}
+      {displayError ? <Text style={{ color: 'var(--color-overdue)' }}>{displayError}</Text> : null}
 
       {onCancel ? (
-        <Button variant="ghost" fullWidth onClick={onCancel}>
+        <Button variant="ghost" fullWidth onClick={onCancel} disabled={disabled}>
           Cancel scan
         </Button>
       ) : null}

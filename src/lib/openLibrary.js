@@ -1,18 +1,13 @@
 import { mapSubjectsToGenre } from './genreMap.js';
+import { normalizeIsbn } from './isbn.js';
+
+export { normalizeIsbn } from './isbn.js';
 
 const FIELDS = 'key,title,author_name,cover_i,first_publish_year,isbn,subject';
 const CACHE = new Map();
 
 function coverUrl(coverId) {
   return coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : null;
-}
-
-/** Strip to 10- or 13-digit ISBN (handles scanned EAN-13 with optional prefix). */
-export function normalizeIsbn(raw) {
-  const digits = String(raw).replace(/\D/g, '');
-  if (digits.length === 10 || digits.length === 13) return digits;
-  if (digits.length === 12 && digits.startsWith('978')) return `0${digits}`;
-  return null;
 }
 
 export function mapOpenLibraryDoc(doc) {
