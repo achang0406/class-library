@@ -15,7 +15,8 @@ export default defineConfig({
         enabled: false,
       },
       injectManifest: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,wasm,gz}'],
+        globIgnores: ['**/tesseract/**'],
       },
       includeAssets: ['icon.svg'],
       manifest: {

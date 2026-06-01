@@ -11,6 +11,8 @@ node_modules
 dist
 dist-ssr
 *.local
+public/tesseract/*
+!public/tesseract/.gitkeep
 
 # Editor directories and files
 .vscode/*

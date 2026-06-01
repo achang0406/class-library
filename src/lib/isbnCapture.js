@@ -1,3 +1,4 @@
+import { createWorker } from 'tesseract.js';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 import { extractIsbnFromText, normalizeIsbn } from './isbn.js';
 
@@ -10,6 +11,15 @@ const ISBN_BARCODE_FORMATS = [
 ];
 
 const TEMP_SCANNER_ID = 'cl-isbn-still-capture';
+
+/** Self-hosted so PWA / Vercel rewrites never return HTML for worker scripts. */
+const TESSERACT_OPTIONS = {
+  workerPath: '/tesseract/worker.min.js',
+  corePath: '/tesseract/',
+  langPath: '/tesseract/tessdata',
+  workerBlobURL: false,
+  gzip: true,
+};
 
 let ocrWorkerPromise = null;
 
@@ -53,8 +63,7 @@ export function captureVideoFrame(video) {
 async function getOcrWorker() {
   if (!ocrWorkerPromise) {
     ocrWorkerPromise = (async () => {
-      const { createWorker } = await import('tesseract.js');
-      const worker = await createWorker('eng', 1, { logger: () => {} });
+      const worker = await createWorker('eng', 1, TESSERACT_OPTIONS);
       await worker.setParameters({
         tessedit_pageseg_mode: '6',
         tessedit_char_whitelist: '0123456789XxISBN-: ',
@@ -83,7 +92,9 @@ async function readIsbnFromStillImage(file) {
     }
 
     const worker = await getOcrWorker();
-    const { data: { text } } = await worker.recognize(file);
+    const {
+      data: { text },
+    } = await worker.recognize(file);
     const fromText = extractIsbnFromText(text);
     if (fromText) return fromText;
 
