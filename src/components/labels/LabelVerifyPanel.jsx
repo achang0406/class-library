@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { BarcodeScanner } from '../scanner/BarcodeScanner.jsx';
 import { Button } from '../ui/Button.jsx';
 import { Stack } from '../ui/Stack.jsx';
+import { StatusBanner } from '../ui/StatusBanner.jsx';
 import { Text } from '../ui/Text.jsx';
 import { getBookByBarcode, markLabelsPrinted } from '../../lib/books.js';
 
@@ -45,7 +46,7 @@ export function LabelVerifyPanel({ initialBooks, onDone }) {
           return;
         }
         if (fromDb.label_printed_at) {
-          setScanFeedback({ status: 'already-validated', book: fromDb });
+          setScanFeedback({ status: 'notice', book: fromDb });
           return;
         }
         book = fromDb;
@@ -98,20 +99,7 @@ export function LabelVerifyPanel({ initialBooks, onDone }) {
       <BarcodeScanner scannerId="cl-label-verify" mode="qr" active={!busy} onScan={handleScan} />
 
       {scanFeedback?.status === 'success' ? (
-        <Stack
-          gap="var(--space-1)"
-          style={{
-            padding: 'var(--space-3) var(--space-4)',
-            borderRadius: 'var(--radius-sm)',
-            border: '2px solid var(--color-available)',
-            background: 'color-mix(in srgb, var(--color-available) 14%, var(--color-card))',
-          }}
-          role="status"
-          aria-live="polite"
-        >
-          <Text variant="emphasis" style={{ color: 'var(--color-primary)' }}>
-            Validated
-          </Text>
+        <StatusBanner variant="success" title="Validated">
           <Text variant="body">
             {scanFeedback.book.title}
             {scanFeedback.book.author ? ` — ${scanFeedback.book.author}` : ''}
@@ -122,26 +110,13 @@ export function LabelVerifyPanel({ initialBooks, onDone }) {
           <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
             {scanFeedback.remaining > 0
               ? `${scanFeedback.remaining} book${scanFeedback.remaining === 1 ? '' : 's'} left to validate.`
-              : 'All labels validated — you\'re done!'}
+              : "All labels validated — you're done!"}
           </Text>
-        </Stack>
+        </StatusBanner>
       ) : null}
 
-      {scanFeedback?.status === 'already-validated' ? (
-        <Stack
-          gap="var(--space-1)"
-          style={{
-            padding: 'var(--space-3) var(--space-4)',
-            borderRadius: 'var(--radius-sm)',
-            border: '2px solid var(--color-accent)',
-            background: 'color-mix(in srgb, var(--color-accent) 18%, var(--color-card))',
-          }}
-          role="status"
-          aria-live="polite"
-        >
-          <Text variant="emphasis" style={{ color: 'var(--color-text)' }}>
-            Already validated
-          </Text>
+      {scanFeedback?.status === 'notice' ? (
+        <StatusBanner variant="notice" title="Already validated">
           <Text variant="body">
             {scanFeedback.book.title}
             {scanFeedback.book.author ? ` — ${scanFeedback.book.author}` : ''}
@@ -152,26 +127,13 @@ export function LabelVerifyPanel({ initialBooks, onDone }) {
           <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
             This label was confirmed earlier — no action needed.
           </Text>
-        </Stack>
+        </StatusBanner>
       ) : null}
 
       {scanFeedback?.status === 'error' ? (
-        <Stack
-          gap="var(--space-1)"
-          style={{
-            padding: 'var(--space-3) var(--space-4)',
-            borderRadius: 'var(--radius-sm)',
-            border: '2px solid var(--color-overdue)',
-            background: 'color-mix(in srgb, var(--color-overdue) 10%, var(--color-card))',
-          }}
-          role="alert"
-          aria-live="polite"
-        >
-          <Text variant="emphasis" style={{ color: 'var(--color-overdue)' }}>
-            Could not validate
-          </Text>
+        <StatusBanner variant="error" title="Could not validate" role="alert">
           <Text variant="body">{scanFeedback.message}</Text>
-        </Stack>
+        </StatusBanner>
       ) : null}
 
       {pending.length > 0 ? (

@@ -18,6 +18,7 @@ const LINKS = [
   { to: '/teacher/labels', label: 'Print Labels' },
   { to: '/teacher/labels/verify', label: 'Validate Labels' },
   { to: '/teacher/people', label: 'Manage People' },
+  { to: '/teacher/reading', label: 'Class Reading' },
   { to: '/teacher/overdue', label: 'Overdue Books' },
   { to: '/teacher/import', label: 'Import CSV' },
 ];

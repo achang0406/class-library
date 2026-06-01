@@ -15,8 +15,13 @@ Mobile-first PWA for cataloging a classroom library — custom QR barcode labels
 ### 1. Supabase
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Open **SQL Editor** and run [`supabase/migrations/001_schema.sql`](supabase/migrations/001_schema.sql).
+2. Open **SQL Editor** and run migrations in order:
+   - [`supabase/migrations/001_schema.sql`](supabase/migrations/001_schema.sql)
+   - [`supabase/migrations/002_add_lexile.sql`](supabase/migrations/002_add_lexile.sql) (if not already applied)
+   - [`supabase/migrations/003_student_tracking.sql`](supabase/migrations/003_student_tracking.sql)
 3. Copy **Project URL** and **anon public** key from Settings → API.
+
+If you have checkouts from before student tracking shipped, run `npm run db:backfill-borrowers` once to link them to roster names.
 
 ### 2. Environment
 
@@ -58,7 +63,18 @@ npm run db:seed
 | `npm run lint:fix`     | ESLint auto-fix               |
 | `npm run format`       | Prettier write                |
 | `npm run format:check` | Prettier check                |
-| `npm run db:seed`      | Seed sample books & borrowers |
+| `npm run db:seed`              | Seed sample books & borrowers        |
+| `npm run db:backfill-borrowers` | Link old checkouts to roster IDs    |
+
+## Book recommendations
+
+Each student gets personalized suggestions on their **reading profile** (`/teacher/students/:id`, linked from the class roster). The system is **rule-based** — no ML or LLM training.
+
+1. **Build a profile** from checkout history: top genres, top authors, and books already borrowed.
+2. **In-library recs** — score available books (+3 genre match, +2 author match, +popularity), exclude books they have already checked out. New readers with little history get popular picks instead.
+3. **External recs** — search Open Library by the same genres/authors, drop titles you already own, show the rest with links.
+
+Full details: [`docs/RECOMMENDATIONS.md`](docs/RECOMMENDATIONS.md)
 
 ## Deploy (Vercel + Supabase)
 
@@ -92,6 +108,8 @@ Camera scanning requires **HTTPS** (Vercel provides this).
 | `/teacher/labels`             | Select books → print            |
 | `/teacher/labels/print?ids=…` | Print label sheet               |
 | `/teacher/people`             | Class roster + staff            |
+| `/teacher/reading`            | Class-wide student reading stats |
+| `/teacher/students/:id`       | Student reading profile & recs  |
 | `/teacher/overdue`            | Overdue loans                   |
 | `/teacher/import`             | CSV bulk import                 |
 

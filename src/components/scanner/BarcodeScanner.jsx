@@ -87,9 +87,12 @@ const SCAN_MODES = {
   },
   isbn: {
     formats: ISBN_BARCODE_FORMATS,
-    qrbox: undefined,
+    qrbox: (viewfinderWidth, viewfinderHeight) => ({
+      width: Math.floor(viewfinderWidth * 0.92),
+      height: Math.max(72, Math.floor(viewfinderHeight * 0.28)),
+    }),
     fps: 15,
-    hint: 'Hold 8–12″ back, tap the barcode to focus, or use Capture ISBN below',
+    hint: 'Line up the ISBN barcode in the wide box — tap to focus, hold 8–12″ back',
     cameraConstraints: ISBN_CAMERA_CONSTRAINTS,
   },
 };

@@ -4,8 +4,9 @@ import { Button } from '../ui/Button.jsx';
 import { Input } from '../ui/Input.jsx';
 import { Spinner } from '../ui/Spinner.jsx';
 import { Stack } from '../ui/Stack.jsx';
+import { StatusBanner } from '../ui/StatusBanner.jsx';
 import { Text } from '../ui/Text.jsx';
-import { captureIsbnFrame, readIsbnFromPhotoFile } from '../../lib/isbnCapture.js';
+import { captureIsbnFromScanner, normalizeScannedIsbn, readIsbnFromPhotoFile } from '../../lib/isbnCapture.js';
 
 const ISBN_SCANNER_ID = 'cl-isbn-scanner';
 
@@ -24,19 +25,23 @@ export function IsbnScanPanel({ onLookup, onCancel, busy = false, error = '' }) 
     if (trimmed) onLookup(trimmed);
   }
 
-  async function handleCapture() {
-    setCaptureError('');
-    let file;
-    try {
-      file = await captureIsbnFrame(ISBN_SCANNER_ID);
-    } catch (err) {
-      setCaptureError(err.message ?? 'Could not read ISBN from camera.');
+  function handleLiveScan(raw) {
+    const isbn = normalizeScannedIsbn(raw);
+    if (!isbn) {
+      setCaptureError(
+        'Barcode detected but not a valid ISBN. Center the ISBN barcode in the wide box and try again.',
+      );
       return;
     }
+    setCaptureError('');
+    onLookup(isbn);
+  }
 
+  async function handleCapture() {
+    setCaptureError('');
     setCaptureBusy(true);
     try {
-      const isbn = await readIsbnFromPhotoFile(file);
+      const isbn = await captureIsbnFromScanner(ISBN_SCANNER_ID);
       await onLookup(isbn);
     } catch (err) {
       setCaptureError(err.message ?? 'Could not read ISBN from camera.');
@@ -75,16 +80,16 @@ export function IsbnScanPanel({ onLookup, onCancel, busy = false, error = '' }) 
       <Stack gap="var(--space-1)">
         <Text variant="emphasis">Scan ISBN on back cover</Text>
         <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
-          Live scan reads the barcode automatically. Tap the preview to focus, or hold 8–12″ back if
-          blurry. Use Capture ISBN for printed numbers — not your LIB- checkout sticker.
+          Line up the ISBN barcode in the wide scan box. Tap the preview to focus, or use Capture
+          ISBN for printed numbers — not your LIB- checkout sticker.
         </Text>
       </Stack>
 
       <BarcodeScanner
         scannerId={ISBN_SCANNER_ID}
         mode="isbn"
-        active={!lookupBusy}
-        onScan={onLookup}
+        active={!lookupBusy && !captureBusy}
+        onScan={handleLiveScan}
       />
 
       <Stack gap="var(--space-2)">
@@ -92,7 +97,7 @@ export function IsbnScanPanel({ onLookup, onCancel, busy = false, error = '' }) 
           Capture ISBN from camera
         </Button>
         <Text variant="label" style={{ color: 'var(--color-text-muted)', textAlign: 'center' }}>
-          Hold the printed ISBN number in the frame, then tap capture.
+          Best for printed ISBN text — hold steady for a second before tapping capture.
         </Text>
         <input
           ref={photoInputRef}
@@ -141,7 +146,11 @@ export function IsbnScanPanel({ onLookup, onCancel, busy = false, error = '' }) 
         </Stack>
       ) : null}
 
-      {displayError ? <Text style={{ color: 'var(--color-overdue)' }}>{displayError}</Text> : null}
+      {displayError ? (
+        <StatusBanner variant="error" title="Could not read ISBN" role="alert">
+          <Text variant="body">{displayError}</Text>
+        </StatusBanner>
+      ) : null}
 
       {onCancel ? (
         <Button variant="ghost" fullWidth onClick={onCancel} disabled={lookupBusy || captureBusy}>
