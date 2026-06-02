@@ -19,6 +19,7 @@ Mobile-first PWA for cataloging a classroom library — custom QR barcode labels
    - [`supabase/migrations/001_schema.sql`](supabase/migrations/001_schema.sql)
    - [`supabase/migrations/002_add_lexile.sql`](supabase/migrations/002_add_lexile.sql) (if not already applied)
    - [`supabase/migrations/003_student_tracking.sql`](supabase/migrations/003_student_tracking.sql)
+   - [`supabase/migrations/004_add_book_descriptions.sql`](supabase/migrations/004_add_book_descriptions.sql)
 3. Copy **Project URL** and **anon public** key from Settings → API.
 
 If you have checkouts from before student tracking shipped, run `npm run db:backfill-borrowers` once to link them to roster names.

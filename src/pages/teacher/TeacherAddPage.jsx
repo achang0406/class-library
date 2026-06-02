@@ -24,6 +24,7 @@ const emptyForm = {
   isbn: null,
   publish_year: null,
   open_library_key: null,
+  description: '',
   lexile: null,
   reading_level: null,
 };
@@ -37,6 +38,7 @@ function buildPayload(form) {
     isbn: form.isbn,
     publish_year: form.publish_year,
     open_library_key: form.open_library_key,
+    description: form.description?.trim() || null,
     lexile: form.lexile,
     reading_level: form.reading_level,
   };
@@ -72,6 +74,7 @@ export default function TeacherAddPage() {
       isbn: item.isbn,
       publish_year: item.publishYear,
       open_library_key: item.openLibraryKey,
+      description: item.description ?? '',
       lexile: item.lexile ?? null,
       reading_level: item.readingLevel ?? null,
     });
@@ -230,6 +233,42 @@ export default function TeacherAddPage() {
                 </option>
               ))}
             </Select>
+            <label
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--space-1)',
+                width: '100%',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 'var(--font-label)',
+                  color: 'var(--color-text-muted)',
+                  fontWeight: 600,
+                }}
+              >
+                Description
+              </span>
+              <textarea
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                placeholder="Optional book description"
+                rows={5}
+                style={{
+                  minHeight: '120px',
+                  padding: 'var(--space-2) var(--space-3)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--color-border)',
+                  background: 'var(--color-input-bg)',
+                  color: 'var(--color-text)',
+                  width: '100%',
+                  outline: 'none',
+                  resize: 'vertical',
+                  font: 'inherit',
+                }}
+              />
+            </label>
             <Input
               label="Copies"
               type="number"
@@ -239,8 +278,8 @@ export default function TeacherAddPage() {
               onChange={(e) => setCopies(e.target.value)}
             />
             <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
-              Each copy gets its own barcode sticker — use for multiple physical books with the
-              same title.
+              Each copy gets its own barcode sticker — use for multiple physical books with the same
+              title.
             </Text>
             {copyCount > 1 ? (
               <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>

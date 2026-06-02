@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS books (
   isbn text,
   publish_year int,
   open_library_key text,
+  description text,
   lexile int,
   reading_level text,
   status text NOT NULL DEFAULT 'available' CHECK (status IN ('available', 'checked_out')),

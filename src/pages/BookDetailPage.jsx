@@ -11,7 +11,12 @@ import { SupabaseBanner } from '../components/layout/SupabaseBanner.jsx';
 import { PageContainer } from '../components/layout/PageContainer.jsx';
 import { getBookById, deleteBook, markLabelsNeeded, updateBook } from '../lib/books.js';
 import { getActiveCheckoutForBook, enrichCheckout } from '../lib/checkouts.js';
-import { resolveBookReadingDisplay, normalizeLexile, formatLexile, readingLevelFromLexile } from '../lib/lexile.js';
+import {
+  resolveBookReadingDisplay,
+  normalizeLexile,
+  formatLexile,
+  readingLevelFromLexile,
+} from '../lib/lexile.js';
 import { getOverdueDays } from '../lib/settings.js';
 import { useTeacherSession } from '../components/layout/TeacherSessionProvider.jsx';
 
@@ -42,7 +47,7 @@ export default function BookDetailPage() {
           return;
         }
         setBook(b);
-        setLexileInput(b.lexile != null ? formatLexile(b.lexile) ?? '' : '');
+        setLexileInput(b.lexile != null ? (formatLexile(b.lexile) ?? '') : '');
         if (b.status === 'checked_out') {
           const c = await getActiveCheckoutForBook(b.id);
           if (!cancelled) setCheckout(c ? enrichCheckout(c) : null);
@@ -97,7 +102,7 @@ export default function BookDetailPage() {
         reading_level: parsed != null ? readingLevelFromLexile(parsed) : null,
       });
       setBook(updated);
-      setLexileInput(parsed != null ? formatLexile(parsed) ?? '' : '');
+      setLexileInput(parsed != null ? (formatLexile(parsed) ?? '') : '');
     } catch (err) {
       setError(err.message ?? 'Failed to save Lexile');
     } finally {
@@ -197,6 +202,20 @@ export default function BookDetailPage() {
             </Text>
           </Stack>
         </Stack>
+        {book.description ? (
+          <Stack gap="var(--space-2)">
+            <Text as="h2" variant="emphasis">
+              Description
+            </Text>
+            <Text
+              as="p"
+              variant="body"
+              style={{ color: 'var(--color-text-muted)', whiteSpace: 'pre-line' }}
+            >
+              {book.description}
+            </Text>
+          </Stack>
+        ) : null}
         {checkout ? (
           <Stack gap="var(--space-1)">
             <Text variant="emphasis">
