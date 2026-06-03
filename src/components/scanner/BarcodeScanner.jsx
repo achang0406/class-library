@@ -92,7 +92,8 @@ const SCAN_MODES = {
       height: Math.max(72, Math.floor(viewfinderHeight * 0.28)),
     }),
     fps: 15,
-    hint: 'Line up the ISBN barcode in the wide box — tap to focus, hold 8–12″ back',
+    hint: 'Line up the ISBN barcode in the box',
+    compactHint: 'Line up the ISBN barcode in the box',
     cameraConstraints: ISBN_CAMERA_CONSTRAINTS,
   },
 };
@@ -102,6 +103,7 @@ export function BarcodeScanner({
   active = true,
   scannerId = SCANNER_ID,
   mode = 'qr',
+  compact = false,
 }) {
   const [error, setError] = useState('');
   const [running, setRunning] = useState(false);
@@ -116,8 +118,8 @@ export function BarcodeScanner({
   const scanFormats = modeConfig.formats;
   const scanQrbox = modeConfig.qrbox;
   const scanFps = modeConfig.fps;
-  const scanHint = modeConfig.hint;
-  const tapToFocusEnabled = mode === 'isbn' && running;
+  const scanHint = compact && modeConfig.compactHint ? modeConfig.compactHint : modeConfig.hint;
+  const tapToFocusEnabled = mode === 'isbn' && running && !compact;
 
   useEffect(() => {
     onScanRef.current = onScan;
@@ -264,7 +266,7 @@ export function BarcodeScanner({
       </div>
       {error ? (
         <Text style={{ color: 'var(--color-overdue)', marginTop: 'var(--space-3)' }}>{error}</Text>
-      ) : (
+      ) : compact ? null : (
         <Stack gap="var(--space-1)" style={{ marginTop: 'var(--space-2)' }}>
           <Text variant="label" style={{ textAlign: 'center', display: 'block' }}>
             {running ? scanHint : 'Starting camera…'}
@@ -314,10 +316,19 @@ export function ManualBarcodeEntry({ onSubmit, placeholder = 'LIB-000001', label
   );
 }
 
-export function BarcodeScannerPanel({ onScan, onCancel, active = true, mode = 'qr' }) {
+export function BarcodeScannerPanel({
+  onScan,
+  onCancel,
+  active = true,
+  mode = 'qr',
+  betweenScannerAndManual = null,
+}) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
       <BarcodeScanner onScan={onScan} active={active} mode={mode} />
+      {betweenScannerAndManual ? (
+        <Stack gap="var(--space-3)">{betweenScannerAndManual}</Stack>
+      ) : null}
       {mode === 'qr' ? <ManualBarcodeEntry onSubmit={onScan} /> : null}
       {onCancel ? (
         <Button variant="ghost" fullWidth onClick={onCancel}>

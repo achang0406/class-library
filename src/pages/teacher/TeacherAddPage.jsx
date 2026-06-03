@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { OpenLibrarySearch } from '../../components/books/OpenLibrarySearch.jsx';
 import { IsbnScanPanel } from '../../components/books/IsbnScanPanel.jsx';
 import { BookCover } from '../../components/ui/BookCover.jsx';
@@ -9,6 +9,7 @@ import { Modal } from '../../components/ui/Modal.jsx';
 import { Select } from '../../components/ui/Select.jsx';
 import { Stack } from '../../components/ui/Stack.jsx';
 import { Text } from '../../components/ui/Text.jsx';
+import { TextLink } from '../../components/ui/TextLink.jsx';
 import { SupabaseBanner } from '../../components/layout/SupabaseBanner.jsx';
 import { PageContainer } from '../../components/layout/PageContainer.jsx';
 import { GENRES } from '../../constants/genres.js';
@@ -180,124 +181,118 @@ export default function TeacherAddPage() {
             error={isbnLookupError}
           />
         ) : (
-          <Button variant="secondary" fullWidth onClick={() => setShowIsbnScan(true)}>
-            Scan ISBN on back cover
-          </Button>
-        )}
+          <>
+            <Button variant="secondary" fullWidth onClick={() => setShowIsbnScan(true)}>
+              Scan ISBN on back cover
+            </Button>
 
-        <OpenLibrarySearch onSelect={applySelection} autoFocus={!showIsbnScan} />
+            <OpenLibrarySearch onSelect={applySelection} autoFocus />
 
-        <form onSubmit={handleSave}>
-          <Stack gap="var(--space-4)">
-            {form.title ? (
-              <Stack
-                gap="var(--space-3)"
-                style={{ flexDirection: 'row', alignItems: 'flex-start' }}
-              >
-                <BookCover src={form.cover_url} alt="" width={80} />
-                <Stack gap="var(--space-1)">
-                  <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
-                    Selected — fields auto-filled. Edit if needed.
-                  </Text>
-                  {form.lexile != null ? (
-                    <Text variant="label">
-                      {formatLexile(form.lexile)}
-                      {form.reading_level ? ` · ${form.reading_level}` : ''}
-                    </Text>
-                  ) : null}
-                </Stack>
-              </Stack>
-            ) : null}
-            <Input
-              label="Title"
-              value={form.title}
-              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-              required
-            />
-            <Input
-              label="Author"
-              value={form.author}
-              onChange={(e) => setForm((f) => ({ ...f, author: e.target.value }))}
-            />
-            <Select
-              label="Genre"
-              value={form.genre}
-              onChange={(e) => setForm((f) => ({ ...f, genre: e.target.value }))}
-            >
-              {GENRES.map((g) => (
-                <option key={g} value={g}>
-                  {g}
-                </option>
-              ))}
-            </Select>
-            <Input
-              label="Copies"
-              type="number"
-              min={1}
-              max={20}
-              value={copies}
-              onChange={(e) => setCopies(e.target.value)}
-            />
-            <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
-              Each copy gets its own barcode sticker — use for multiple physical books with the
-              same title.
-            </Text>
-            {copyCount > 1 ? (
-              <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
-                Adding {copyCount} copies — each will get a unique LIB- barcode for checkout.
-              </Text>
-            ) : null}
-            {duplicate ? (
-              <Stack gap="var(--space-3)">
-                <Text style={{ color: 'var(--color-overdue)' }}>
-                  This title is already in your library
-                  {existingCopyCount > 1 ? ` (${existingCopyCount} copies)` : ''}: &ldquo;
-                  {duplicate.title}&rdquo;.
-                </Text>
-                <Stack gap="var(--space-2)" style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                  <Link to={`/books/${duplicate.id}`}>
-                    <Button type="button" variant="secondary">
-                      View existing
-                    </Button>
-                  </Link>
-                  <Button
-                    type="button"
-                    variant="primary"
-                    loading={saving}
-                    onClick={() => saveBooks({ allowDuplicate: true })}
+            <form onSubmit={handleSave}>
+              <Stack gap="var(--space-4)">
+                {form.title ? (
+                  <Stack
+                    gap="var(--space-3)"
+                    style={{ flexDirection: 'row', alignItems: 'flex-start' }}
                   >
-                    Add another copy
+                    <BookCover src={form.cover_url} alt="" width={80} />
+                    <Stack gap="var(--space-1)">
+                      <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
+                        Selected — fields auto-filled. Edit if needed.
+                      </Text>
+                      {form.lexile != null ? (
+                        <Text variant="label">
+                          {formatLexile(form.lexile)}
+                          {form.reading_level ? ` · ${form.reading_level}` : ''}
+                        </Text>
+                      ) : null}
+                    </Stack>
+                  </Stack>
+                ) : null}
+                <Input
+                  label="Title"
+                  value={form.title}
+                  onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                  required
+                />
+                <Input
+                  label="Author"
+                  value={form.author}
+                  onChange={(e) => setForm((f) => ({ ...f, author: e.target.value }))}
+                />
+                <Select
+                  label="Genre"
+                  value={form.genre}
+                  onChange={(e) => setForm((f) => ({ ...f, genre: e.target.value }))}
+                >
+                  {GENRES.map((g) => (
+                    <option key={g} value={g}>
+                      {g}
+                    </option>
+                  ))}
+                </Select>
+                <Input
+                  label="Copies"
+                  type="number"
+                  min={1}
+                  max={20}
+                  value={copies}
+                  onChange={(e) => setCopies(e.target.value)}
+                />
+                <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
+                  Each copy gets its own barcode sticker — use for multiple physical books with the
+                  same title.
+                </Text>
+                {copyCount > 1 ? (
+                  <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
+                    Adding {copyCount} copies — each will get a unique LIB- barcode for checkout.
+                  </Text>
+                ) : null}
+                {duplicate ? (
+                  <Stack gap="var(--space-3)">
+                    <Text style={{ color: 'var(--color-overdue)' }}>
+                      This title is already in your library
+                      {existingCopyCount > 1 ? ` (${existingCopyCount} copies)` : ''}: &ldquo;
+                      {duplicate.title}&rdquo;.
+                    </Text>
+                    <Stack gap="var(--space-2)" style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                      <TextLink to={`/books/${duplicate.id}`}>View existing</TextLink>
+                      <Button
+                        type="button"
+                        variant="primary"
+                        loading={saving}
+                        onClick={() => saveBooks({ allowDuplicate: true })}
+                      >
+                        Add another copy
+                      </Button>
+                    </Stack>
+                  </Stack>
+                ) : null}
+                {error ? <Text style={{ color: 'var(--color-overdue)' }}>{error}</Text> : null}
+                {!duplicate ? (
+                  <Button type="submit" variant="primary" fullWidth loading={saving}>
+                    {rapidMode
+                      ? copyCount > 1
+                        ? `Save ${copyCount} copies & Next`
+                        : 'Save & Next'
+                      : copyCount > 1
+                        ? `Save ${copyCount} copies`
+                        : 'Save book'}
                   </Button>
-                </Stack>
+                ) : null}
               </Stack>
-            ) : null}
-            {error ? <Text style={{ color: 'var(--color-overdue)' }}>{error}</Text> : null}
-            {!duplicate ? (
-              <Button type="submit" variant="primary" fullWidth loading={saving}>
-                {rapidMode
-                  ? copyCount > 1
-                    ? `Save ${copyCount} copies & Next`
-                    : 'Save & Next'
-                  : copyCount > 1
-                    ? `Save ${copyCount} copies`
-                    : 'Save book'}
-              </Button>
-            ) : null}
-          </Stack>
-        </form>
+            </form>
 
-        {!rapidMode ? (
-          <Link to="/teacher/add?mode=rapid" style={{ textAlign: 'center' }}>
-            <Text variant="emphasis" style={{ color: 'var(--color-primary)' }}>
-              Switch to Rapid Add mode
-            </Text>
-          </Link>
-        ) : (
-          <Link to="/teacher/add" style={{ textAlign: 'center' }}>
-            <Text variant="emphasis" style={{ color: 'var(--color-primary)' }}>
-              Single book mode
-            </Text>
-          </Link>
+            {!rapidMode ? (
+              <TextLink to="/teacher/add?mode=rapid" center>
+                Switch to Rapid Add mode
+              </TextLink>
+            ) : (
+              <TextLink to="/teacher/add" center>
+                Single book mode
+              </TextLink>
+            )}
+          </>
         )}
       </Stack>
 

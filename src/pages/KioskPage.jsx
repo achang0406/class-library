@@ -1,5 +1,4 @@
 import { useCallback, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { BarcodeScannerPanel } from '../components/scanner/BarcodeScanner.jsx';
 import { BookCover } from '../components/ui/BookCover.jsx';
 import { Button } from '../components/ui/Button.jsx';
@@ -7,6 +6,7 @@ import { Input } from '../components/ui/Input.jsx';
 import { Stack } from '../components/ui/Stack.jsx';
 import { StatusBanner } from '../components/ui/StatusBanner.jsx';
 import { Text } from '../components/ui/Text.jsx';
+import { TextLink } from '../components/ui/TextLink.jsx';
 import { SupabaseBanner } from '../components/layout/SupabaseBanner.jsx';
 import { PageContainer } from '../components/layout/PageContainer.jsx';
 import { useBorrowers } from '../hooks/useBorrowers.js';
@@ -30,6 +30,42 @@ const STEPS = {
 function borrowerLabel(borrower) {
   if (!borrower) return '';
   return borrower.type === 'student' ? borrower.name : `${borrower.name} (${borrower.type})`;
+}
+
+function ScanFeedback({ busy, busyLabel, feedback }) {
+  if (!busy && !feedback) return null;
+
+  return (
+    <>
+      {busy ? (
+        <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
+          {busyLabel}
+        </Text>
+      ) : null}
+      {feedback ? (
+        <StatusBanner
+          variant={feedback.variant}
+          title={feedback.title}
+          role={feedback.variant === 'error' ? 'alert' : 'status'}
+        >
+          <Text variant="body">
+            <strong>{feedback.body}</strong>
+            {feedback.author ? (
+              <>
+                <br />
+                {feedback.author}
+              </>
+            ) : null}
+          </Text>
+          {feedback.detail ? (
+            <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
+              {feedback.detail}
+            </Text>
+          ) : null}
+        </StatusBanner>
+      ) : null}
+    </>
+  );
 }
 
 export default function KioskPage() {
@@ -218,11 +254,9 @@ export default function KioskPage() {
             >
               Return a Book
             </Button>
-            <Link to="/" style={{ textAlign: 'center' }}>
-              <Text variant="emphasis" style={{ color: 'var(--color-primary)' }}>
-                Back to home
-              </Text>
-            </Link>
+            <TextLink to="/" center>
+              Back to home
+            </TextLink>
           </>
         ) : null}
 
@@ -243,26 +277,14 @@ export default function KioskPage() {
                 </Button>
               </StatusBanner>
             ) : null}
-            <BarcodeScannerPanel onScan={handleScanCheckout} onCancel={reset} active={!busy} />
-            {busy ? <Text>Looking up book…</Text> : null}
-            {feedback ? (
-              <StatusBanner variant={feedback.variant} title={feedback.title} role={feedback.variant === 'error' ? 'alert' : 'status'}>
-                <Text variant="body">
-                  <strong>{feedback.body}</strong>
-                  {feedback.author ? (
-                    <>
-                      <br />
-                      {feedback.author}
-                    </>
-                  ) : null}
-                </Text>
-                {feedback.detail ? (
-                  <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
-                    {feedback.detail}
-                  </Text>
-                ) : null}
-              </StatusBanner>
-            ) : null}
+            <BarcodeScannerPanel
+              onScan={handleScanCheckout}
+              onCancel={reset}
+              active={!busy}
+              betweenScannerAndManual={
+                <ScanFeedback busy={busy} busyLabel="Looking up book…" feedback={feedback} />
+              }
+            />
           </>
         ) : null}
 
@@ -271,26 +293,14 @@ export default function KioskPage() {
             <Text as="h2" variant="title">
               Return a book
             </Text>
-            <BarcodeScannerPanel onScan={handleScanReturn} onCancel={reset} active={!busy} />
-            {busy ? <Text>Processing…</Text> : null}
-            {feedback ? (
-              <StatusBanner variant={feedback.variant} title={feedback.title} role={feedback.variant === 'error' ? 'alert' : 'status'}>
-                <Text variant="body">
-                  <strong>{feedback.body}</strong>
-                  {feedback.author ? (
-                    <>
-                      <br />
-                      {feedback.author}
-                    </>
-                  ) : null}
-                </Text>
-                {feedback.detail ? (
-                  <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
-                    {feedback.detail}
-                  </Text>
-                ) : null}
-              </StatusBanner>
-            ) : null}
+            <BarcodeScannerPanel
+              onScan={handleScanReturn}
+              onCancel={reset}
+              active={!busy}
+              betweenScannerAndManual={
+                <ScanFeedback busy={busy} busyLabel="Processing…" feedback={feedback} />
+              }
+            />
           </>
         ) : null}
 

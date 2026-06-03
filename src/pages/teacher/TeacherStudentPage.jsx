@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { BookCard } from '../../components/books/BookCard.jsx';
 import { Avatar } from '../../components/ui/Avatar.jsx';
 import { Badge } from '../../components/ui/Badge.jsx';
@@ -118,11 +118,6 @@ export default function TeacherStudentPage() {
       <PageContainer>
         <Stack gap="var(--space-4)">
           <Text style={{ color: 'var(--color-overdue)' }}>{error || 'Student not found.'}</Text>
-          <Link to="/teacher/people">
-            <Text variant="emphasis" style={{ color: 'var(--color-primary)' }}>
-              Back to roster
-            </Text>
-          </Link>
         </Stack>
       </PageContainer>
     );
@@ -340,12 +335,6 @@ export default function TeacherStudentPage() {
             </Stack>
           )}
         </Stack>
-
-        <Link to="/teacher/people">
-          <Text variant="emphasis" style={{ color: 'var(--color-primary)' }}>
-            Back to roster
-          </Text>
-        </Link>
       </Stack>
     </PageContainer>
   );

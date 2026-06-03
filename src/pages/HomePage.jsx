@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/Button.jsx';
 import { Stack } from '../components/ui/Stack.jsx';
 import { Text } from '../components/ui/Text.jsx';
+import { TextLink } from '../components/ui/TextLink.jsx';
 import { PageContainer } from '../components/layout/PageContainer.jsx';
 import { InstallAppLink } from '../components/layout/InstallAppLink.jsx';
 import { TeacherModeBadge } from '../components/layout/TeacherModeBadge.jsx';
@@ -41,11 +42,9 @@ export default function HomePage() {
               Check Out / Return
             </Button>
           </Link>
-          <Link to="/teacher" style={{ textDecoration: 'none', textAlign: 'center' }}>
-            <Text variant="emphasis" style={{ color: 'var(--color-primary)' }}>
-              Teacher Login
-            </Text>
-          </Link>
+          <TextLink to="/teacher" center>
+            Teacher Login
+          </TextLink>
         </Stack>
         <InstallAppLink />
       </Stack>

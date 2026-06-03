@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { TextLink } from '../ui/TextLink.jsx';
 import { Text } from '../ui/Text.jsx';
 import { TeacherModeBadge } from './TeacherModeBadge.jsx';
 
@@ -14,11 +14,7 @@ export function AppHeader({ title = 'Class Library', backTo }) {
         background: 'var(--color-card)',
       }}
     >
-      {backTo ? (
-        <Link to={backTo} style={{ fontWeight: 600, fontSize: 'var(--font-body)' }}>
-          ← Back
-        </Link>
-      ) : null}
+      {backTo ? <TextLink to={backTo}>← Back</TextLink> : null}
       <Text as="h1" variant="emphasis" style={{ flex: 1, minWidth: 0 }}>
         {title}
       </Text>

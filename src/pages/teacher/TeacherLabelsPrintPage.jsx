@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { LabelPrintSheet } from '../../components/labels/LabelPrintSheet.jsx';
 import { Button } from '../../components/ui/Button.jsx';
 import { Spinner } from '../../components/ui/Spinner.jsx';
 import { Stack } from '../../components/ui/Stack.jsx';
 import { Text } from '../../components/ui/Text.jsx';
+import { TextLink } from '../../components/ui/TextLink.jsx';
 import { getBooksByIds } from '../../lib/books.js';
 import { AVERY_5658 } from '../../constants/avery5658.js';
 
@@ -66,9 +67,7 @@ export default function TeacherLabelsPrintPage() {
     return (
       <Stack gap="var(--space-4)" style={{ padding: 'var(--space-6)' }}>
         <Text style={{ color: 'var(--color-overdue)' }}>{error || 'No books to print.'}</Text>
-        <Link to="/teacher/labels">
-          <Button variant="secondary">Back to label selection</Button>
-        </Link>
+        <TextLink to="/teacher/labels">Back to label selection</TextLink>
       </Stack>
     );
   }

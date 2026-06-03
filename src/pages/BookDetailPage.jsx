@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Badge } from '../components/ui/Badge.jsx';
 import { BookCover } from '../components/ui/BookCover.jsx';
 import { Button } from '../components/ui/Button.jsx';
@@ -225,11 +225,6 @@ export default function BookDetailPage() {
           </Button>
         ) : null}
         {error ? <Text style={{ color: 'var(--color-overdue)' }}>{error}</Text> : null}
-        <Link to="/browse" style={{ textAlign: 'center' }}>
-          <Text variant="emphasis" style={{ color: 'var(--color-primary)' }}>
-            Back to browse
-          </Text>
-        </Link>
       </Stack>
     </PageContainer>
   );
