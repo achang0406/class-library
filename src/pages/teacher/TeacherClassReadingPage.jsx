@@ -72,20 +72,7 @@ export default function TeacherClassReadingPage() {
           <StatCard label="Active readers" value={summary.activeReaders} />
           <StatCard label="Books read" value={summary.totalBooksRead} />
           <StatCard label="Currently out" value={summary.currentlyOut} />
-          <StatCard
-            label="Avg Lexile read"
-            value={summary.avgLexileLabel ?? '—'}
-            detail={
-              summary.avgLexileLabel
-                ? [
-                    summary.avgLexileGrade,
-                    `${summary.lexileBooksRead} book${summary.lexileBooksRead === 1 ? '' : 's'}`,
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')
-                : undefined
-            }
-          />
+          <StatCard label="Avg Lexile read" value={summary.avgLexileLabel ?? '—'} />
         </Inline>
 
         <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>

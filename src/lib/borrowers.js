@@ -47,6 +47,22 @@ export async function updateBorrower(id, payload) {
   return data;
 }
 
+export async function bulkCreateBorrowers(rows) {
+  if (!rows.length) return [];
+  const client = requireClient();
+  const { data, error } = await client
+    .from('borrowers')
+    .insert(
+      rows.map((row) => ({
+        display_name: row.displayName,
+        borrower_type: row.borrowerType,
+      })),
+    )
+    .select('*');
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function deactivateBorrower(id) {
   return updateBorrower(id, { active: false });
 }

@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { AppHeader } from './AppHeader.jsx';
-import { TeacherModeBadge } from './TeacherModeBadge.jsx';
+import { TeacherHeaderAction } from './TeacherHeaderAction.jsx';
 
 export function AppShell({ title, backTo, showHeader = true }) {
   return (
@@ -15,7 +15,7 @@ export function AppShell({ title, backTo, showHeader = true }) {
             zIndex: 10,
           }}
         >
-          <TeacherModeBadge />
+          <TeacherHeaderAction />
         </div>
       ) : null}
       <main style={{ flex: 1 }}>

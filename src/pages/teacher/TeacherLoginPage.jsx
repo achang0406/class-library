@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '../../components/ui/Button.jsx';
-import { Input } from '../../components/ui/Input.jsx';
+import { PasscodeInput } from '../../components/ui/PasscodeInput.jsx';
 import { Stack } from '../../components/ui/Stack.jsx';
 import { Text } from '../../components/ui/Text.jsx';
 import { PageContainer } from '../../components/layout/PageContainer.jsx';
@@ -40,19 +40,10 @@ export default function TeacherLoginPage() {
     trySignIn(passcode);
   }
 
-  function handlePasscodeChange(e) {
-    const digits = e.target.value.replace(/\D/g, '').slice(0, 4);
-    setPasscode(digits);
-    setError('');
-    if (digits.length === 4) {
-      trySignIn(digits);
-    }
-  }
-
   return (
     <PageContainer narrow>
       <Stack gap="var(--space-5)" style={{ paddingTop: 'var(--space-8)' }}>
-        <Stack gap="var(--space-2)">
+        <Stack gap="var(--space-2)" align="center" style={{ textAlign: 'center' }}>
           <Text as="h1" variant="title">
             Teacher Login
           </Text>
@@ -62,19 +53,17 @@ export default function TeacherLoginPage() {
         </Stack>
         <form onSubmit={handleSubmit}>
           <Stack gap="var(--space-4)">
-            <Input
-              label="4-digit passcode"
-              type="password"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              pattern="\d{4}"
-              maxLength={4}
-              placeholder="••••"
+            <PasscodeInput
               value={passcode}
-              onChange={handlePasscodeChange}
-              style={{ fontFamily: 'var(--font-mono)', letterSpacing: '0.35em', fontSize: '1.25rem' }}
+              onChange={(next) => {
+                setPasscode(next);
+                setError('');
+              }}
+              onComplete={trySignIn}
             />
-            {error ? <Text style={{ color: 'var(--color-overdue)' }}>{error}</Text> : null}
+            {error ? (
+              <Text style={{ color: 'var(--color-overdue)', textAlign: 'center' }}>{error}</Text>
+            ) : null}
             <Button type="submit" variant="primary" fullWidth disabled={passcode.length !== 4}>
               Sign In
             </Button>

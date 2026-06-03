@@ -1,6 +1,6 @@
 import { TextLink } from '../ui/TextLink.jsx';
 import { Text } from '../ui/Text.jsx';
-import { TeacherModeBadge } from './TeacherModeBadge.jsx';
+import { TeacherHeaderAction } from './TeacherHeaderAction.jsx';
 
 export function AppHeader({ title = 'Class Library', backTo }) {
   return (
@@ -18,7 +18,7 @@ export function AppHeader({ title = 'Class Library', backTo }) {
       <Text as="h1" variant="emphasis" style={{ flex: 1, minWidth: 0 }}>
         {title}
       </Text>
-      <TeacherModeBadge />
+      <TeacherHeaderAction />
     </header>
   );
 }

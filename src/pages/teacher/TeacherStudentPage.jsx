@@ -15,7 +15,6 @@ import { getBorrowerById } from '../../lib/borrowers.js';
 import { checkoutDuration } from '../../lib/checkouts.js';
 import { getExternalRecommendationsForStudent } from '../../lib/externalRecommendations.js';
 import { getStudentRecommendationContext } from '../../lib/recommendations.js';
-import { resolveBookReadingDisplay } from '../../lib/lexile.js';
 import { daysSince } from '../../lib/settings.js';
 import { isSupabaseConfigured } from '../../lib/supabase.js';
 
@@ -123,8 +122,6 @@ export default function TeacherStudentPage() {
     );
   }
 
-  const recentReads = history.filter((checkout) => checkout.returned_at).slice(0, 5);
-
   return (
     <PageContainer>
       <Stack gap="var(--space-5)" style={{ paddingTop: 'var(--space-4)' }}>
@@ -146,22 +143,9 @@ export default function TeacherStudentPage() {
           <Inline gap="var(--space-3)" wrap style={{ width: '100%' }}>
             <StatCard label="Books read" value={stats.booksCompleted} />
             <StatCard label="Currently out" value={stats.currentLoans} />
-            <StatCard label="Avg days out" value={stats.avgDaysOut || '—'} />
+            <StatCard label="Avg loan (days)" value={stats.avgDaysOut || '—'} />
             <StatCard label="Re-reads" value={stats.repeatCheckouts} />
-            <StatCard
-              label="Avg Lexile read"
-              value={stats.avgLexileLabel ?? '—'}
-              detail={
-                stats.avgLexileLabel
-                  ? [
-                      stats.avgLexileGrade,
-                      `${stats.lexileBooksRead} book${stats.lexileBooksRead === 1 ? '' : 's'}`,
-                    ]
-                      .filter(Boolean)
-                      .join(' · ')
-                  : undefined
-              }
-            />
+            <StatCard label="Avg Lexile read" value={stats.avgLexileLabel ?? '—'} />
           </Inline>
         ) : null}
 
@@ -236,50 +220,6 @@ export default function TeacherStudentPage() {
                 <ExternalBookCard key={book.openLibraryKey ?? book.title} book={book} />
               ))}
             </div>
-          </Stack>
-        ) : null}
-
-        {recentReads.length > 0 ? (
-          <Stack gap="var(--space-3)">
-            <Text as="h2" variant="title">
-              Recently read
-            </Text>
-            <Stack gap="var(--space-2)">
-              {recentReads.map((checkout) => {
-                const book = checkout.books;
-                const reading = resolveBookReadingDisplay(book ?? {});
-                const days = checkoutDuration(checkout);
-
-                return (
-                  <Stack
-                    key={checkout.id}
-                    gap="var(--space-2)"
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      padding: 'var(--space-3)',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: 'var(--radius-sm)',
-                      background: 'var(--color-card)',
-                    }}
-                  >
-                    <BookCover src={book?.cover_url} alt="" width={48} />
-                    <Stack gap="var(--space-1)" style={{ flex: 1 }}>
-                      <Text variant="emphasis">{book?.title ?? 'Unknown book'}</Text>
-                      {book?.author ? (
-                        <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
-                          {book.author}
-                        </Text>
-                      ) : null}
-                      <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
-                        Returned {formatDate(checkout.returned_at)} · {days} day{days === 1 ? '' : 's'}
-                        {reading.lexileLabel ? ` · ${reading.lexileLabel}` : ''}
-                      </Text>
-                    </Stack>
-                  </Stack>
-                );
-              })}
-            </Stack>
           </Stack>
         ) : null}
 

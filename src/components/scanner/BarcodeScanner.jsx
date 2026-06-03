@@ -7,7 +7,6 @@ import {
   applyTapFocus,
   getScannerVideoTrack,
   normalizedPointFromTap,
-  supportsTapFocus,
 } from '../../lib/cameraFocus.js';
 
 const SCANNER_ID = 'cl-barcode-scanner';
@@ -77,12 +76,42 @@ async function startScannerCamera(scanner, preferredConstraints, cameraConfig, o
   throw lastError;
 }
 
+function getScanRegionGuideStyle(mode) {
+  if (mode === 'isbn') {
+    return {
+      position: 'absolute',
+      left: '4%',
+      top: '50%',
+      transform: 'translateY(-50%)',
+      width: '92%',
+      height: '28%',
+      border: '2px solid var(--color-accent)',
+      borderRadius: 'var(--radius-sm)',
+      boxShadow: '0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent)',
+      pointerEvents: 'none',
+    };
+  }
+
+  return {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 'min(72%, 260px)',
+    aspectRatio: '1',
+    border: '2px solid var(--color-accent)',
+    borderRadius: 'var(--radius-sm)',
+    boxShadow: '0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent)',
+    pointerEvents: 'none',
+  };
+}
+
 const SCAN_MODES = {
   qr: {
     formats: undefined,
     qrbox: { width: 260, height: 260 },
     fps: 10,
-    hint: 'Point camera at the QR sticker on the book',
+    hint: 'Point at the QR sticker · tap to focus',
     cameraConstraints: DEFAULT_CAMERA_CONSTRAINTS,
   },
   isbn: {
@@ -92,8 +121,7 @@ const SCAN_MODES = {
       height: Math.max(72, Math.floor(viewfinderHeight * 0.28)),
     }),
     fps: 15,
-    hint: 'Line up the ISBN barcode in the box',
-    compactHint: 'Line up the ISBN barcode in the box',
+    hint: 'Line up the ISBN barcode · tap to focus',
     cameraConstraints: ISBN_CAMERA_CONSTRAINTS,
   },
 };
@@ -108,7 +136,6 @@ export function BarcodeScanner({
   const [error, setError] = useState('');
   const [running, setRunning] = useState(false);
   const [focusRing, setFocusRing] = useState(null);
-  const [tapFocusSupported, setTapFocusSupported] = useState(null);
   const scannerRef = useRef(null);
   const viewportRef = useRef(null);
   const focusTimerRef = useRef(null);
@@ -118,8 +145,8 @@ export function BarcodeScanner({
   const scanFormats = modeConfig.formats;
   const scanQrbox = modeConfig.qrbox;
   const scanFps = modeConfig.fps;
-  const scanHint = compact && modeConfig.compactHint ? modeConfig.compactHint : modeConfig.hint;
-  const tapToFocusEnabled = mode === 'isbn' && running && !compact;
+  const scanHint = modeConfig.hint;
+  const tapToFocusEnabled = running;
 
   useEffect(() => {
     onScanRef.current = onScan;
@@ -166,8 +193,6 @@ export function BarcodeScanner({
 
         if (!cancelled) {
           setRunning(true);
-          const track = getScannerVideoTrack(scannerId);
-          setTapFocusSupported(track ? supportsTapFocus(track) : false);
         }
       } catch (err) {
         if (!cancelled) {
@@ -181,7 +206,6 @@ export function BarcodeScanner({
     return () => {
       cancelled = true;
       setRunning(false);
-      setTapFocusSupported(null);
       if (focusTimerRef.current) {
         window.clearTimeout(focusTimerRef.current);
         focusTimerRef.current = null;
@@ -229,6 +253,9 @@ export function BarcodeScanner({
         }}
       >
         <div id={scannerId} style={{ width: '100%', minHeight: 240 }} />
+        {running ? (
+          <div aria-hidden style={getScanRegionGuideStyle(mode)} />
+        ) : null}
         {tapToFocusEnabled ? (
           <button
             type="button"
@@ -266,19 +293,18 @@ export function BarcodeScanner({
       </div>
       {error ? (
         <Text style={{ color: 'var(--color-overdue)', marginTop: 'var(--space-3)' }}>{error}</Text>
-      ) : compact ? null : (
-        <Stack gap="var(--space-1)" style={{ marginTop: 'var(--space-2)' }}>
-          <Text variant="label" style={{ textAlign: 'center', display: 'block' }}>
-            {running ? scanHint : 'Starting camera…'}
-          </Text>
-          {running && mode === 'isbn' ? (
-            <Text variant="label" style={{ color: 'var(--color-text-muted)', textAlign: 'center' }}>
-              {tapFocusSupported === false
-                ? 'This device uses automatic focus — move back if the image is blurry.'
-                : 'Tap the preview to focus on the barcode or ISBN text.'}
-            </Text>
-          ) : null}
-        </Stack>
+      ) : (
+        <Text
+          variant="label"
+          style={{
+            textAlign: 'center',
+            display: 'block',
+            marginTop: 'var(--space-2)',
+            color: compact ? 'var(--color-text-muted)' : 'var(--color-text)',
+          }}
+        >
+          {running ? scanHint : 'Starting camera…'}
+        </Text>
       )}
     </div>
   );
@@ -299,6 +325,7 @@ export function ManualBarcodeEntry({ onSubmit, placeholder = 'LIB-000001', label
           padding: 'var(--space-2) var(--space-3)',
           borderRadius: 'var(--radius-sm)',
           border: '1px solid var(--color-border)',
+          fontSize: 'var(--font-input)',
           fontFamily: placeholder.startsWith('LIB') ? 'var(--font-mono)' : 'inherit',
         }}
       />

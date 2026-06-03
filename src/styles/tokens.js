@@ -27,6 +27,7 @@ export const TOKENS = {
   '--radius-pill': '999px',
   '--font-label': '11px',
   '--font-body': '14px',
+  '--font-input': '16px',
   '--font-emphasis': '16px',
   '--font-title': '20px',
   '--font-display': '28px',

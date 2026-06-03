@@ -25,6 +25,7 @@ export function Select({ label, id, children, style, ...props }) {
           background: 'var(--color-input-bg)',
           color: 'var(--color-text)',
           width: '100%',
+          fontSize: 'var(--font-input)',
           ...style,
         }}
         {...props}

@@ -68,6 +68,12 @@ export const globalStyles = `
     font: inherit;
   }
 
+  input:not([type='checkbox']):not([type='file']):not([type='radio']),
+  select,
+  textarea {
+    font-size: var(--font-input);
+  }
+
   img {
     max-width: 100%;
     display: block;

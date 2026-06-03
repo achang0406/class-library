@@ -25,6 +25,7 @@ export function Input({ label, id, style, ...props }) {
           background: 'var(--color-input-bg)',
           color: 'var(--color-text)',
           width: '100%',
+          fontSize: 'var(--font-input)',
           outline: 'none',
           ...style,
         }}

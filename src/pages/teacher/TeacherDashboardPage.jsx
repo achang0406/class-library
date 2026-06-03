@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/Button.jsx';
 import { Inline } from '../../components/ui/Inline.jsx';
 import { Stack } from '../../components/ui/Stack.jsx';
@@ -7,7 +7,6 @@ import { StatCard } from '../../components/ui/StatCard.jsx';
 import { Text } from '../../components/ui/Text.jsx';
 import { SupabaseBanner } from '../../components/layout/SupabaseBanner.jsx';
 import { PageContainer } from '../../components/layout/PageContainer.jsx';
-import { useTeacherSession } from '../../components/layout/TeacherSessionProvider.jsx';
 import { getBookStats } from '../../lib/books.js';
 import { listOverdueCheckouts } from '../../lib/checkouts.js';
 import { isSupabaseConfigured } from '../../lib/supabase.js';
@@ -24,8 +23,6 @@ const LINKS = [
 ];
 
 export default function TeacherDashboardPage() {
-  const navigate = useNavigate();
-  const { signOut } = useTeacherSession();
   const [stats, setStats] = useState({ total: '—', checkedOut: '—', overdue: '—' });
 
   useEffect(() => {
@@ -41,26 +38,10 @@ export default function TeacherDashboardPage() {
       .catch(() => {});
   }, []);
 
-  function handleSignOut() {
-    signOut();
-    navigate('/');
-  }
-
   return (
     <PageContainer>
       <Stack gap="var(--space-5)" style={{ paddingTop: 'var(--space-4)' }}>
         <SupabaseBanner />
-        <Stack
-          gap="var(--space-2)"
-          style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
-        >
-          <Text as="h1" variant="title">
-            Teacher Dashboard
-          </Text>
-          <Button variant="ghost" onClick={handleSignOut}>
-            Sign out
-          </Button>
-        </Stack>
         <Inline gap="var(--space-3)" wrap style={{ width: '100%' }}>
           {[
             { label: 'Books', value: stats.total },
