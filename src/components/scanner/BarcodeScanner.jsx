@@ -76,36 +76,6 @@ async function startScannerCamera(scanner, preferredConstraints, cameraConfig, o
   throw lastError;
 }
 
-function getScanRegionGuideStyle(mode) {
-  if (mode === 'isbn') {
-    return {
-      position: 'absolute',
-      left: '4%',
-      top: '50%',
-      transform: 'translateY(-50%)',
-      width: '92%',
-      height: '28%',
-      border: '2px solid var(--color-accent)',
-      borderRadius: 'var(--radius-sm)',
-      boxShadow: '0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent)',
-      pointerEvents: 'none',
-    };
-  }
-
-  return {
-    position: 'absolute',
-    left: '50%',
-    top: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 'min(72%, 260px)',
-    aspectRatio: '1',
-    border: '2px solid var(--color-accent)',
-    borderRadius: 'var(--radius-sm)',
-    boxShadow: '0 0 0 1px color-mix(in srgb, var(--color-accent) 35%, transparent)',
-    pointerEvents: 'none',
-  };
-}
-
 const SCAN_MODES = {
   qr: {
     formats: undefined,
@@ -253,9 +223,6 @@ export function BarcodeScanner({
         }}
       >
         <div id={scannerId} style={{ width: '100%', minHeight: 240 }} />
-        {running ? (
-          <div aria-hidden style={getScanRegionGuideStyle(mode)} />
-        ) : null}
         {tapToFocusEnabled ? (
           <button
             type="button"

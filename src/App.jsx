@@ -23,9 +23,7 @@ export default function App() {
     <BrowserRouter>
       <TeacherSessionProvider>
         <Routes>
-        <Route path="/" element={<AppShell title="Class Library" />}>
-          <Route index element={<HomePage />} />
-        </Route>
+        <Route path="/" element={<HomePage />} />
         <Route path="/browse" element={<AppShell title="Browse Library" backTo="/" />}>
           <Route index element={<BrowsePage />} />
         </Route>
