@@ -59,6 +59,7 @@ npm run db:seed
 | `npm run dev`          | Dev server                    |
 | `npm run build`        | Production build              |
 | `npm run preview`      | Preview production build      |
+| `npm run preview -- --host 0.0.0.0` | LAN preview for device testing |
 | `npm run lint`         | ESLint                        |
 | `npm run lint:fix`     | ESLint auto-fix               |
 | `npm run format`       | Prettier write                |
@@ -85,13 +86,73 @@ Full details: [`docs/RECOMMENDATIONS.md`](docs/RECOMMENDATIONS.md)
 
 Supabase stays on the free tier for a single classroom; no extra backend required.
 
-## Install on iPad (PWA)
+## PWA on iPhone or iPad
 
-1. Open the deployed site in **Safari**.
+Camera scanning and **Add to Home Screen** require **HTTPS**. The deployed Vercel URL is the easiest path for day-to-day classroom use.
+
+### Production (recommended)
+
+1. Open the deployed site in **Safari** (not Chrome).
 2. Tap **Share** → **Add to Home Screen**.
-3. Use **Check Out / Return** from the home screen icon for kiosk mode.
+3. Launch from the home screen icon for kiosk-style checkout.
 
-Camera scanning requires **HTTPS** (Vercel provides this).
+### Local build on a physical device
+
+Use this to test the real PWA (service worker, install prompt, camera) before deploying. Your Mac and iPhone/iPad must be on the **same Wi‑Fi network**, and `.env.local` must point at your Supabase project.
+
+#### 1. Build and serve on your LAN
+
+```bash
+npm run build
+npm run preview -- --host 0.0.0.0
+```
+
+Preview defaults to port **4173**. Find your Mac’s IP:
+
+```bash
+ipconfig getifaddr en0
+```
+
+On the device, open `http://YOUR_MAC_IP:4173` in Safari. You can click through the app, but **camera and PWA install will not work over plain HTTP** on iOS.
+
+#### 2. Expose HTTPS with a tunnel (required for camera + install)
+
+Keep `vite preview` running, then in another terminal:
+
+```bash
+# Option A: ngrok (install from https://ngrok.com)
+ngrok http 4173
+
+# Option B: Cloudflare Tunnel (install cloudflared)
+cloudflared tunnel --url http://localhost:4173
+```
+
+Copy the **https://** URL from the tunnel output and open it in **Safari** on the iPhone/iPad.
+
+#### 3. Install on the device
+
+1. Open the **https://** URL in Safari.
+2. Tap **Share** → **Add to Home Screen**.
+3. Open the app from the new icon (standalone mode, no browser chrome).
+
+#### Quick UI-only check (no PWA, no camera)
+
+For layout and navigation only:
+
+```bash
+npm run dev -- --host
+```
+
+Open `http://YOUR_MAC_IP:5173` on the device. The dev server does not register the service worker, and iOS blocks the camera on non-HTTPS pages except `localhost`.
+
+#### Troubleshooting
+
+| Issue | Fix |
+| ----- | --- |
+| Page won’t load on device | Confirm same Wi‑Fi; allow incoming connections if macOS Firewall prompts |
+| Camera permission denied | Use an **https://** URL (tunnel or Vercel), not `http://` |
+| Add to Home Screen missing | Use Safari; open the production or tunneled HTTPS URL after `npm run build` |
+| Stale app after changes | Re-run `npm run build`, restart preview, remove old home-screen icon and re-add |
 
 ## Routes
 
