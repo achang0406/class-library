@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Badge } from '../components/ui/Badge.jsx';
 import { BookCover } from '../components/ui/BookCover.jsx';
 import { Button } from '../components/ui/Button.jsx';
-import { Input } from '../components/ui/Input.jsx';
 import { Spinner } from '../components/ui/Spinner.jsx';
 import { Stack } from '../components/ui/Stack.jsx';
 import { Text } from '../components/ui/Text.jsx';
@@ -179,16 +178,47 @@ export default function BookDetailPage() {
                 {reading.readingLevel ? ` · ${reading.readingLevel}` : ''}
               </Text>
             ) : isTeacher ? (
-              <Stack gap="var(--space-2)">
-                <Input
-                  label="Lexile measure"
-                  placeholder="e.g. 720L or BR100L"
-                  value={lexileInput}
-                  onChange={(e) => setLexileInput(e.target.value)}
-                />
-                <Button variant="secondary" loading={lexileBusy} onClick={handleSaveLexile}>
-                  Save Lexile
-                </Button>
+              <Stack gap="var(--space-1)">
+                <Text variant="label" style={{ color: 'var(--color-text-muted)' }}>
+                  Add Lexile
+                </Text>
+                <Stack
+                  gap="var(--space-2)"
+                  style={{ flexDirection: 'row', alignItems: 'center', maxWidth: 220 }}
+                >
+                  <input
+                    value={lexileInput}
+                    onChange={(e) => setLexileInput(e.target.value)}
+                    placeholder="720L"
+                    aria-label="Lexile measure"
+                    style={{
+                      flex: 1,
+                      minWidth: 0,
+                      minHeight: 40,
+                      padding: 'var(--space-2)',
+                      borderRadius: 'var(--radius-sm)',
+                      border: '1px solid var(--color-border)',
+                      background: 'var(--color-input-bg)',
+                      color: 'var(--color-text)',
+                      fontSize: 'var(--font-input)',
+                      fontFamily: 'var(--font-mono)',
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSaveLexile();
+                      }
+                    }}
+                  />
+                  <Button
+                    variant="secondary"
+                    loading={lexileBusy}
+                    onClick={handleSaveLexile}
+                    style={{ minHeight: 40, padding: '0 var(--space-3)', flexShrink: 0 }}
+                  >
+                    Save
+                  </Button>
+                </Stack>
               </Stack>
             ) : null}
             {book.isbn ? <Text variant="label">ISBN {book.isbn}</Text> : null}
