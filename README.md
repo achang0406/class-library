@@ -5,23 +5,31 @@ Mobile-first PWA for cataloging a classroom library — custom QR barcode labels
 ## Stack
 
 - React 19 + Vite + React Router
-- Supabase (PostgreSQL)
+- Supabase (PostgreSQL, `lyanne_library` schema)
 - PWA (`vite-plugin-pwa`)
 - Open Library API (covers + metadata)
 - `qrcode` + `html5-qrcode`
 
+## Supabase projects
+
+| Environment | Project | Schema |
+|-------------|---------|--------|
+| **Production** | DiscCheck hub (`mczxxonwvsztbrqmjzlu`) | `lyanne_library` |
+| **Preview / local dev** | Staging (`iunqmpxpwhybqyfxcsdt`) | `lyanne_library` |
+
+Pickup-frisbee (`pickup_frisbee` schema) lives on the same prod and staging projects.
+
 ## Setup
 
-### 1. Supabase
+### 1. Supabase schema
 
-1. Create a project at [supabase.com](https://supabase.com).
-2. Open **SQL Editor** and run migrations in order:
-   - [`supabase/migrations/001_schema.sql`](supabase/migrations/001_schema.sql)
-   - [`supabase/migrations/002_add_lexile.sql`](supabase/migrations/002_add_lexile.sql) (if not already applied)
-   - [`supabase/migrations/003_student_tracking.sql`](supabase/migrations/003_student_tracking.sql)
-3. Copy **Project URL** and **anon public** key from Settings → API.
+On the **shared hub** (prod or staging), run once in SQL Editor:
 
-If you have checkouts from before student tracking shipped, run `npm run db:backfill-borrowers` once to link them to roster names.
+- [`supabase/migrations/004_lyanne_library_schema.sql`](supabase/migrations/004_lyanne_library_schema.sql)
+
+Legacy migrations `001`–`003` targeted `public` on a standalone project; use `004` for new shared-hub installs.
+
+Ensure `lyanne_library` is exposed in **API → Exposed schemas** (included when using disc-check's `supabase config push`).
 
 ### 2. Environment
 
@@ -29,11 +37,12 @@ If you have checkouts from before student tracking shipped, run `npm run db:back
 cp .env.example .env.local
 ```
 
-Edit `.env.local`:
+Point `.env.local` at **staging** for local development:
 
 ```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
+VITE_SUPABASE_URL=https://iunqmpxpwhybqyfxcsdt.supabase.co
+VITE_SUPABASE_ANON_KEY=your-staging-anon-key
+VITE_SUPABASE_DB_SCHEMA=lyanne_library
 VITE_TEACHER_PASSCODE=1234
 ```
 
@@ -52,6 +61,8 @@ Open http://localhost:5173
 npm run db:seed
 ```
 
+If you have checkouts from before student tracking shipped, run `npm run db:backfill-borrowers` once to link them to roster names.
+
 ## Scripts
 
 | Command                | Description                   |
@@ -66,25 +77,24 @@ npm run db:seed
 | `npm run format:check` | Prettier check                |
 | `npm run db:seed`              | Seed sample books & borrowers        |
 | `npm run db:backfill-borrowers` | Link old checkouts to roster IDs    |
+| `npm run db:backfill-lexile`    | Fetch Lexile from Open Library      |
 
 ## Book recommendations
 
 Each student gets personalized suggestions on their **reading profile** (`/teacher/students/:id`, linked from the class roster). The system is **rule-based** — no ML or LLM training.
 
-1. **Build a profile** from checkout history: top genres, top authors, and books already borrowed.
-2. **In-library recs** — score available books (+3 genre match, +2 author match, +popularity), exclude books they have already checked out. New readers with little history get popular picks instead.
-3. **External recs** — search Open Library by the same genres/authors, drop titles you already own, show the rest with links.
-
 Full details: [`docs/RECOMMENDATIONS.md`](docs/RECOMMENDATIONS.md)
 
-## Deploy (Vercel + Supabase)
+## Deploy (Vercel)
 
-1. Push repo to GitHub.
-2. Import project in [Vercel](https://vercel.com) — framework preset **Vite**.
-3. Add environment variables (same as `.env.local`).
-4. Deploy. `vercel.json` handles SPA routing.
+| Variable | Production | Preview |
+|----------|------------|---------|
+| `VITE_SUPABASE_URL` | Prod hub URL | Staging URL |
+| `VITE_SUPABASE_ANON_KEY` | Prod hub anon | Staging anon |
+| `VITE_SUPABASE_DB_SCHEMA` | `lyanne_library` | `lyanne_library` |
+| `VITE_TEACHER_PASSCODE` | Your passcode | Your passcode |
 
-Supabase stays on the free tier for a single classroom; no extra backend required.
+Import in [Vercel](https://vercel.com) — framework preset **Vite**. `vercel.json` handles SPA routing.
 
 ## PWA on iPhone or iPad
 
@@ -107,7 +117,7 @@ npm run build
 npm run preview -- --host 0.0.0.0
 ```
 
-Preview defaults to port **4173**. Find your Mac’s IP:
+Preview defaults to port **4173**. Find your Mac's IP:
 
 ```bash
 ipconfig getifaddr en0
@@ -149,7 +159,7 @@ Open `http://YOUR_MAC_IP:5173` on the device. The dev server does not register t
 
 | Issue | Fix |
 | ----- | --- |
-| Page won’t load on device | Confirm same Wi‑Fi; allow incoming connections if macOS Firewall prompts |
+| Page won't load on device | Confirm same Wi‑Fi; allow incoming connections if macOS Firewall prompts |
 | Camera permission denied | Use an **https://** URL (tunnel or Vercel), not `http://` |
 | Add to Home Screen missing | Use Safari; open the production or tunneled HTTPS URL after `npm run build` |
 | Stale app after changes | Re-run `npm run build`, restart preview, remove old home-screen icon and re-add |
@@ -184,8 +194,8 @@ src/
   components/labels/   Printable Avery-style labels
   pages/               Route pages
   lib/                 Supabase, Open Library, checkouts
-supabase/migrations/   SQL schema
-scripts/seed.mjs       Sample data
+supabase/migrations/   SQL schema (004 = shared hub)
+scripts/               Seed and backfill scripts
 ```
 
 ## Label workflow
