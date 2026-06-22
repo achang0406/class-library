@@ -1,18 +1,10 @@
 import dotenv from 'dotenv';
-import { createClient } from '@supabase/supabase-js';
+import { createSupabaseClient } from './supabase-client.mjs';
 
 dotenv.config({ path: '.env.local' });
 dotenv.config();
 
-const url = process.env.VITE_SUPABASE_URL;
-const key = process.env.VITE_SUPABASE_ANON_KEY;
-
-if (!url || !key) {
-  console.error('Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in .env.local');
-  process.exit(1);
-}
-
-const supabase = createClient(url, key);
+const supabase = createSupabaseClient();
 
 const SAMPLE_BOOKS = [
   {
